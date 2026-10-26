@@ -117,3 +117,8 @@ test("completeTask: a repeat with no due date anchors on today", () => {
 test("completeTask: a non-string repeat value (corrupt data) does not repeat", () => {
   assert.equal(completeTask({ id: 1, title: "x", status: "active", due: "", tags: [], repeat: ["daily"] }, TODAY).next, null);
 });
+
+test("completeTask: the next copy keeps the task's priority (#18)", () => {
+  const { next } = completeTask({ id: 1, title: "Stand-up", status: "active", due: "2026-10-26", tags: [], repeat: "daily", priority: "high" }, "2026-10-26");
+  assert.equal(next.priority, "high");
+});
