@@ -91,3 +91,14 @@ test("main.js: starts the app on the page's document", async () => {
   await settle();
   assert.equal($("empty").textContent, "No tasks yet. Add one above.");
 });
+
+test("startApp: the list marks the active tag and highlights tasks due today", async () => {
+  await startApp(doc);
+  const today = new Date();
+  const iso = [today.getFullYear(), today.getMonth() + 1, today.getDate()].map((n) => String(n).padStart(2, "0")).join("-");
+  await addTask({ title: "Ship it", tags: "work", due: iso });
+  await act($("tag-filter").querySelector(".chip"), "click");
+  const li = $("task-list").firstElementChild;
+  assert.equal(li.querySelector(".chip").getAttribute("aria-pressed"), "true");
+  assert.ok(li.classList.contains("due-soon"));
+});

@@ -1,5 +1,5 @@
 // Coverage gate: every file under src/ must have 100% line, branch and function
-// coverage from the unit tests. Node's own thresholds only judge files a test
+// coverage from the unit tests, with no blanket ignore comments. Node's own thresholds only judge files a test
 // happened to import, so this also fails on any src file missing from the report.
 import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, mkdirSync, rmSync } from "node:fs";
@@ -38,12 +38,25 @@ function parseLcov(text) {
   return files;
 }
 
+// node:coverage comments would hide code from the coverage report. A Stryker
+// disable comment is allowed only for one line, named mutators and a reason, so
+// every equivalent mutant is visible and justified in review.
+const STRYKER_OK = /Stryker disable next-line [A-Za-z]+(,[A-Za-z]+)*: \S.{9,}/;
+function ignoreCommentProblems(name, text) {
+  return text.split(/\r?\n/).flatMap((line, i) => {
+    if (line.includes("node:coverage")) return [`${name}:${i + 1}: uses a node:coverage comment`];
+    if (/Stryker\s+(disable|restore)/.test(line) && !STRYKER_OK.test(line)) {
+      return [`${name}:${i + 1}: Stryker comments must be "Stryker disable next-line <Mutator>: <reason>"`];
+    }
+    return [];
+  });
+}
+
 function gaps(report) {
   const problems = [];
   for (const file of listJs(join(ROOT, "src"))) {
     const name = relative(ROOT, file);
-    // node:coverage ignore/disable comments would hide code from the report.
-    if (readFileSync(file, "utf8").includes("node:coverage")) problems.push(`${name}: uses a node:coverage comment`);
+    problems.push(...ignoreCommentProblems(name, readFileSync(file, "utf8")));
     const c = report[resolve(file)];
     if (!c) { problems.push(`${name}: never loaded by any test`); continue; }
     for (const [kind, found, hit] of [["lines", "LF", "LH"], ["branches", "BRF", "BRH"], ["functions", "FNF", "FNH"]]) {

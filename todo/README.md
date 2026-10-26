@@ -28,9 +28,16 @@ The server must send `.js` as `text/javascript`. `npx serve` does. Python's `htt
 
 ```
 cd todo && npm test                 # = node --test
+cd todo && npm install              # dev-only: Stryker, for mutation testing
 cd todo && npm run test:coverage    # tests + 100% coverage gate
+cd todo && npm run test:mutation    # Stryker mutation testing, must kill 100% of mutants
+cd todo && npm run eval             # both: the full quality gate
 ```
 
-Every file in `src/` has 100% line, branch and function coverage, and `npm run test:coverage` fails if that slips. It also fails for a `src/` file that no test loads. UI and wiring tests run against the real `index.html` in a small fake DOM (`tests/helpers/fake-dom.js`), and storage runs against a fake IndexedDB (`tests/helpers/fake-idb.js`). There are no dependencies. See `CLAUDE.md` for the module map.
+Every file in `src/` has 100% line, branch and function coverage, and `npm run test:coverage` fails if that slips. It also fails for a `src/` file that no test loads. UI and wiring tests run against the real `index.html` in a small fake DOM (`tests/helpers/fake-dom.js`), and storage runs against a fake IndexedDB (`tests/helpers/fake-idb.js`). Both fakes throw where a real browser would.
+
+**Mutation testing** checks that the tests actually test something. Stryker makes ~500 small edits to `src/`, one at a time (for example flipping `===` to `!==`, emptying a string, or deleting a call), and reruns the tests. Every edit must make a test fail. A mutant that survives means an assertion is missing, so 100% coverage alone isn't enough. A mutant that truly can't change behaviour is excluded in the source with `// Stryker disable next-line <Mutator>: <reason>`. Other forms are rejected by the gate. The HTML report is written to `reports/mutation/index.html`.
+
+The app has no runtime dependencies and no build step. Stryker is a dev dependency used only for testing. See `CLAUDE.md` for the module map.
 
 > `app.js` and `styles.css` are the pre-#15 single-file version, kept for reference. They're no longer loaded.

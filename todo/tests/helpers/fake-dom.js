@@ -88,8 +88,11 @@ class FakeDocument extends FakeElement {
     this.doc = this;
     this.activeElement = null;
   }
-  createElement(tag) { return new FakeElement(this, tag); }
-  getElementById(id) { return this.querySelector(`#${id}`); }
+  createElement(tag) {
+    if (!/^[a-z][a-z0-9-]*$/i.test(tag)) throw Object.assign(new Error(`InvalidCharacterError: "${tag}"`), { name: "InvalidCharacterError" });
+    return new FakeElement(this, tag);
+  }
+  getElementById(id) { return id ? this.querySelector(`#${id}`) : null; }
 }
 
 // Parses html into a new document. A <template>'s children go to its .content.

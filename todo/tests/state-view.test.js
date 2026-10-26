@@ -3,7 +3,6 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createState } from "../src/state.js";
-import { FILTER_KEY } from "../src/config.js";
 import { memoryRepo } from "./helpers/memory-repo.js";
 
 function useLocalStorage(storage) {
@@ -18,6 +17,10 @@ const blockedStorage = {
   getItem() { throw new Error("blocked"); },
   setItem() { throw new Error("blocked"); },
 };
+
+// Spelled out, not imported from config.js: browsers already store the choice
+// under this key, so renaming it would silently forget every saved filter.
+const FILTER_KEY = "todo-app:filter";
 
 beforeEach(() => useLocalStorage(workingStorage()));
 
@@ -130,4 +133,18 @@ test("a tag filter is dropped when its last task is deleted", async () => {
   await state.toggleTag("work");
   await state.removeTask(id);
   assert.equal(state.get().view.tag, "");
+});
+
+test("a new state starts with no tasks and no tag filter", () => {
+  const { tasks, view } = createState(memoryRepo()).get();
+  assert.deepEqual(tasks, []);
+  assert.equal(view.tag, "");
+});
+
+test("setDone: a double click while the first save is in flight saves once", async () => {
+  const { repo, state, ids: [id] } = await withTasks({ title: "a" });
+  let saves = 0;
+  repo.complete = async () => { saves++; await new Promise((r) => setTimeout(r, 5)); };
+  await Promise.all([state.setDone(id, true), state.setDone(id, true)]);
+  assert.equal(saves, 1);
 });

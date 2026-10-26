@@ -22,6 +22,7 @@ const render = (fields, activeTag = "") => renderTaskItem(template, task(fields)
 test("createChip: a tag button that shows whether it is the active filter", () => {
   const chip = createChip("work", "work");
   assert.equal(chip.textContent, "#work");
+  assert.equal(chip.type, "button"); // never a submit button, even inside a form
   assert.equal(chip.dataset.tag, "work");
   assert.equal(chip.getAttribute("aria-pressed"), "true");
   assert.equal(createChip("home", "work").getAttribute("aria-pressed"), "false");
@@ -38,6 +39,7 @@ test("renderTaskItem: an active one-off task with no due date or tags", () => {
   assert.equal(li.dataset.status, "active");
   assert.equal(li.querySelector(".task-title").textContent, "Pay rent");
   assert.equal(li.querySelector(".task-done").checked, false);
+  assert.equal(li.querySelector(".task-hold").getAttribute("aria-pressed"), "false");
   assert.equal(li.querySelector(".task-hold").title, "Put on hold");
   assert.equal(li.querySelector(".task-hold").hidden, false);
   assert.equal(li.querySelector(".task-delete").getAttribute("aria-label"), 'Delete "Pay rent"');
@@ -60,6 +62,12 @@ test("renderTaskItem: a done task is ticked and hides hold and stop-repeating", 
   assert.equal(li.querySelector(".task-repeat-label").textContent, "⟳ Weekly");
 });
 
+test("renderTaskItem: each repeat has its label", () => {
+  for (const [repeat, label] of [["daily", "⟳ Daily"], ["weekly", "⟳ Weekly"], ["monthly", "⟳ Monthly"]]) {
+    assert.equal(render({ repeat }).querySelector(".task-repeat-label").textContent, label);
+  }
+});
+
 test("renderTaskItem: an active repeating task can be stopped", () => {
   assert.equal(render({ repeat: "daily" }).querySelector(".task-repeat").hidden, false);
 });
@@ -69,7 +77,9 @@ test("renderTaskItem: due dates are labelled overdue, soon, or plain", () => {
   assert.match(overdue.querySelector(".task-due").textContent, /^Overdue · /);
   assert.equal(overdue.querySelector(".task-due").dataset.state, "overdue");
   assert.ok(overdue.classList.contains("due-overdue"));
-  assert.ok(render({ due: TODAY }).classList.contains("due-soon"));
+  const soon = render({ due: TODAY });
+  assert.ok(soon.classList.contains("due-soon"));
+  assert.match(soon.querySelector(".task-due").textContent, /^Due soon · /);
   const later = render({ due: "2026-12-01" });
   assert.match(later.querySelector(".task-due").textContent, /^Due /);
   assert.equal(later.className, "task");

@@ -42,6 +42,7 @@ test("renderTagRow: one chip per tag, plus clear while a tag is active", () => {
   renderTagRow(row, ["home", "work"], "work");
   assert.deepEqual(row.children.map((c) => c.textContent), ["#home", "#work", "✕ clear tag"]);
   assert.ok(row.children[2].classList.contains("chip-clear"));
+  assert.equal(row.children[2].type, "button");
 });
 
 test("bindTagClicks: a chip toggles its tag, clear clears, other clicks are ignored", async () => {

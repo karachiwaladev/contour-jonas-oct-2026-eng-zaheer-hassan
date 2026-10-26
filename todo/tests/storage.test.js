@@ -134,3 +134,13 @@ test("add: a duplicate key aborts the transaction", async () => {
   await assert.rejects(inTransaction(db, (s) => s.add(task({ id: 1, title: "dup" }))), /ConstraintError/);
   assert.equal((await createTaskRepo(db).all())[0].title, "t");
 });
+
+test("openDb: tasks live in the 'todo-app' database's 'tasks' store, keyed by an auto-incrementing id", async () => {
+  // Spelled out, not imported from config.js: existing users' data is already
+  // stored under these names, so renaming either would lose it.
+  await openDb();
+  const db = fake.databases.get("todo-app");
+  assert.ok(db, "database 'todo-app' was opened");
+  assert.deepEqual({ ...db.stores.get("tasks"), rows: undefined, nextKey: undefined },
+    { keyPath: "id", autoIncrement: true, rows: undefined, nextKey: undefined });
+});
