@@ -1,13 +1,16 @@
 ---
 name: factory-loop
-description: Work through the current repo's open GitHub issues one by one and actually deliver them. React with 👀 to show work has started. Then answer question tickets in a comment and close them, carry out simple action tickets (files, docs, config, scripts, fixes) as a PR, or take project/feature tickets through clarifying questions → an approved plan → build → in-browser verification with chrome-devtools, with screenshots attached to the ticket. Every PR is sent for review to the ticket's author, then merged once they approve, with requested changes addressed first. Never takes destructive actions. Can run on a recurring loop to keep the queue clear. Use this skill whenever the user says "factory loop", "work the issue queue", "answer the tickets", "process/handle/triage the GitHub issues", "build what the tickets ask for", "respond to open issues and close them", or wants issues watched and delivered automatically, even if they don't name the skill.
+description: Work through the current repo's open GitHub issues one by one and actually deliver them. React with 👀 to show work has started. No ticket is ever closed without a person's approval. Question tickets get an answer and are closed only once the reporter accepts it. Action tickets (files, docs, config, scripts, fixes) become a PR, or take project/feature tickets through clarifying questions → an approved plan → build → in-browser verification with chrome-devtools, with screenshots attached to the ticket. Every PR is sent for review to the ticket's author, then merged once they approve, with requested changes addressed first. Never takes destructive actions. Can run on a recurring loop to keep the queue clear. Use this skill whenever the user says "factory loop", "work the issue queue", "answer the tickets", "process/handle/triage the GitHub issues", "build what the tickets ask for", "respond to open issues and close them", or wants issues watched and delivered automatically, even if they don't name the skill.
 ---
 
 # Factory Loop
 
 Turn the repo's open GitHub issues into delivered, closed tickets: answers for questions, merged PRs for changes. The skill does **one pass** over the queue. For a recurring loop, wrap it in `/loop` (see "Running on a loop" below) instead of building scheduling into the pass.
 
-It runs autonomously: it reacts, comments, opens PRs, and closes answered issues without asking first. Two kinds of work wait for a person. Project and feature work waits for their answers and plan approval **on the ticket**. **Every PR waits for review approval** before it's merged. All of this is public, and merged code lands on `main`, so the guardrails below are what keep it trustworthy.
+It runs autonomously: it reacts, answers, builds and opens PRs without asking first. But **it never closes a ticket on its own judgement.** Every ticket closes only after a person approves:
+- **Changes** (files, projects, features): the loop opens a PR and requests review. It merges only after an **approving review**, and the merge (`Closes #N`) is what closes the ticket.
+- **Questions:** the loop posts the answer and leaves the ticket open. It closes the ticket only after the reporter **accepts the answer** in a reply.
+- Project and feature work also waits for answers to clarifying questions and for **plan approval** on the ticket, before any building starts. All of this is public, and merged code lands on `main`, so the guardrails below are what keep it trustworthy.
 
 ## Never destructive
 
@@ -31,7 +34,8 @@ The loop usually posts under the **same GitHub account** as the person filing an
 
 | STAGE | Posted when |
 |---|---|
-| `answer` | a question was answered (5a) |
+| `answer` | a question was answered; waiting for the reporter to accept it (5a) |
+| `closing` | the reporter accepted the answer; posted just before closing (step 7) |
 | `clarify` | the ticket was too vague or destructive (5b) |
 | `questions` | clarifying questions for a project/feature ticket (5d.1) |
 | `plan` | a plan was posted for approval (5d.2) |
@@ -74,7 +78,9 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
    | Latest loop comment | Human reply after it? | Do |
    |---|---|---|
    | none | — | New ticket: step 4 |
-   | `answer` | no | Answered, but the close failed: step 7 only |
+   | `answer` | **yes**, accepting ("thanks", "approved", "correct", "lgtm", "close it") | Close it: step 7 |
+   | `answer` | **yes**, a follow-up or a correction | Treat it as a new question on the same ticket. Re-check and post a revised answer (stage `answer`), and leave it open |
+   | `closing` | no | The close step failed: run step 7 only, without posting another comment |
    | `review` (or `pr`) | — | Check the PR's review state: step 9 |
    | `questions` | **yes** | Answers are in: 5d.2 (plan) |
    | `plan` | **yes**, approving | Build: 5d.3 |
@@ -92,7 +98,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
 
 5. **Read the ticket and decide what kind it is.**
 
-   **a. A question you can answer** (factual, how-to, explanation): write the answer. If it rests on facts that could be wrong or out of date (figures, dates, versions, names), check them with a quick search or the codebase before posting. The comment is public and stays on the ticket, so an answer from memory that turns out wrong costs more than the lookup. Cite a source only if you actually opened it in this run. A citation tells the reader "this was checked here", so citing a page you never read is worse than citing nothing. Post it (step 6, stage `answer`), then close it (step 7).
+   **a. A question you can answer** (factual, how-to, explanation): write the answer. If it rests on facts that could be wrong or out of date (figures, dates, versions, names), check them with a quick search or the codebase before posting. The comment is public and stays on the ticket, so an answer from memory that turns out wrong costs more than the lookup. Cite a source only if you actually opened it in this run. A citation tells the reader "this was checked here", so citing a page you never read is worse than citing nothing. Post it (step 6, stage `answer`), ending with: *"Reply to confirm this answers it and I'll close the ticket, or tell me what's missing."* **Leave it open.** Step 7 closes it only after the reporter accepts.
 
    **b. Too vague, or destructive** (unclear what's wanted, asks for a decision only a person can make, or needs any step from "Never destructive"): post a short comment (stage `clarify`) saying what you understood and what's needed to move forward. **Leave it open.** Being autonomous means not waiting for approval. It doesn't mean guessing at, or closing, tickets you can't actually resolve.
 
@@ -203,13 +209,13 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
    ```
    Lead with the answer, keep it short, and skip the preamble ("Great question!").
 
-7. **Close answered tickets as completed.**
+7. **Close a question ticket only after the reporter accepts the answer.** This runs only from the step 3 route (an accepting human reply after an `answer` comment), never in the same pass that posted the answer. First post a one-line comment (stage `closing`), e.g. `Thanks for confirming, closing this.`, then:
    ```
    gh issue close N --reason completed
    ```
-   Close only tickets you answered in 5a. Leave `clarify`, `questions` and `plan` tickets open. Action, project and feature tickets close themselves when their PR merges.
+   **Never call `gh issue close` anywhere else.** Leave `clarify`, `questions`, `plan` and `review` tickets open. Change tickets close only when a person has approved the PR and it merges with `Closes #N`.
 
-8. **Report** one line per issue: number, title, and what you did (answered + closed / asked for clarification / asked questions / posted plan / PR #n sent for review / changes addressed, re-requested review / PR #n merged after approval / PR #n blocked / waiting on a person), with the comment or PR URL. If nothing was open, say the queue is empty.
+8. **Report** one line per issue: number, title, and what you did (answered, awaiting confirmation / closed after confirmation / asked for clarification / asked questions / posted plan / PR #n sent for review / changes addressed, re-requested review / PR #n merged after approval / PR #n blocked / waiting on a person), with the comment or PR URL. If nothing was open, say the queue is empty.
 
 9. **Follow PRs through review.** For an issue whose latest loop comment is `review` (or legacy `pr`), read the PR:
    ```
@@ -249,7 +255,7 @@ The project's Stop hook (`.claude/hooks/auto-commit.js`) commits and pushes what
 ## Errors
 
 - `gh` not authenticated: tell the user to run `! gh auth login` and stop.
-- If a step fails for one issue (rate limit, permissions), report it and move on to the next issue. The next tick recovers through the step 3 routing. A missing comment means the step re-runs; an `answer` marker re-closes; a `review` marker re-reads the PR's review state.
+- If a step fails for one issue (rate limit, permissions), report it and move on to the next issue. The next tick recovers through the step 3 routing. A missing comment means the step re-runs; a `closing` marker re-closes (the reporter already accepted); a `review` marker re-reads the PR's review state. An `answer` marker on its own never closes anything.
 - If the reviewer can't be requested (not a collaborator, or it's yourself), say so in the `review` comment and leave the PR for a person to review and merge. Don't merge unreviewed.
 - If chrome-devtools isn't available or the page won't load, don't ship. Comment (stage `clarify`) saying verification is blocked and why, and leave the PR unmerged.
 - If a push or merge is refused (branch protection, a permission prompt that was denied), leave the PR open and report it. Don't try to get around the refusal.
