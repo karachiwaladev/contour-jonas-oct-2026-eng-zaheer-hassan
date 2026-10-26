@@ -65,6 +65,17 @@ Repeat for each behaviour in the plan. Domain logic (`src/domain/`) is always te
 
 **Code review before every PR.** Once the build is green and verified, invoke the `superpowers:requesting-code-review` skill on the branch's diff against `main`. Fix every **Critical** and **Important** finding, re-run the tests and checks, and note anything **Minor** you chose not to fix (with the reason) in the PR body under **Code review**. Don't open the PR with an unaddressed Critical or Important finding.
 
+**Security checks before every PR.** After the code review, run both security skills on the change:
+1. **`security-audit`** (`.claude/skills/security-audit/`, Cloudflare's audit skill) in **guidance mode**: ask it for a *focused security review of this branch's diff against `main`*, covering the trust boundaries the change touches, such as user input, storage, rendering of user data (XSS), and auth. Guidance mode is source-only and writes no files. **Never trigger its full-audit mode from the loop:** that's six phases with many sub-agents and reports outside the repo. Run it only when a ticket or the user explicitly asks for a full audit or pen test. Follow its rules: no execution of target code without its OS sandbox, and only `confirmed` findings get a severity.
+2. **`deepsec`** (`.claude/skills/deepsec/`, Vercel's DeepSec scanner) for a **bounded first pass**: its default limits, never a full or unbounded scan unless the user asks.
+
+What to do with what they find:
+- **Critical or High findings (from either) in the code this ticket changed:** fix them test-first, then re-run the check that found them. Don't open the PR while one is unresolved.
+- **Medium or Low findings, or findings in code the ticket didn't touch:** don't fix them in this PR. List them in the PR body under **Security scan** so a person can decide, and keep the scope tight.
+- **What to commit:** DeepSec keeps its scan state in gitignored locations. Don't commit `.deepsec/` setup or findings files in a ticket PR; summarise the results in the PR body instead. The first DeepSec setup (`.deepsec/` config + `INFO.md`) goes in its own PR.
+- **`needs_validation` items** from `security-audit` (a plausible issue that source alone can't settle): list them in the PR body with the exact missing fact. They aren't findings and get no severity.
+- **If either check can't run** (DeepSec needs network and AI credentials in the environment; installs can fail): never write credentials to a file to make it work. Say "<check>: not run, because <reason>" in the PR body, and never claim a check passed when it didn't run. The reviewer then decides whether to approve without it.
+
 **This is enforced.** A `PostToolUse` hook (`.claude/hooks/god-object-guard.js`) measures every source file after each write or edit. Over **200 lines** or **15 functions**, it blocks with a "split this file" message. Test, build and vendor files are skipped. Treat a block as a required refactor, not something to work around.
 
 **Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
@@ -154,7 +165,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       git checkout -B ticket-<N>-<short-slug> origin/main
       ```
    2. **Build exactly what the ticket asks**, using the paths and names it gives, and follow "Engineering standards". For code, that means **TDD** (red, green, refactor) through `superpowers:test-driven-development`. If the repo has a `CLAUDE.md`, follow its conventions and update its project index for anything new. Keep the scope tight, and stay inside "Never destructive".
-   3. **Verify, then get a code review, before you ship.** Run what can be run: unit tests (`node --test`), a build, a lint. Then run `superpowers:requesting-code-review` on the diff and fix every Critical or Important finding. For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
+   3. **Verify, then get a code review, before you ship.** Run what can be run: unit tests (`node --test`), a build, a lint. Then run `superpowers:requesting-code-review` on the diff and fix every Critical or Important finding. Then run the security checks, `security-audit` (guidance mode, on the diff) and `deepsec` (bounded), and fix any Critical or High finding in the changed code, as in "Engineering standards". For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
    4. **Commit, push, open the PR.** Stage only the files you made or changed for this ticket (`git add <paths>`, never `git add -A`). Put `Closes #<N>` in both the commit message and the PR body. Write the PR body to a file, listing what changed and how you verified it.
       ```
       git commit -m "<summary>" -m "Closes #<N>"
@@ -217,7 +228,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
 
       Stop the local server afterwards. If any check fails, fix it and re-run all the checks. Never ship an unverified build.
 
-   5. **Code review, then ship it for review.** Run `superpowers:requesting-code-review` on the branch diff, fix the Critical and Important findings, and re-run the tests and browser checks, retaking screenshots if the UI changed. Then ship as in 5c.4–6, committing the screenshots with the code. Add a **Code review** section to the PR body with what the review found and what you fixed. The PR body lists what was built, the checks run and their results, and embeds the screenshots from the branch, so the reviewer can see the result without running it:
+   5. **Code review and security scan, then ship it for review.** Run `superpowers:requesting-code-review` on the branch diff, and fix the Critical and Important findings. Then run the security checks, `security-audit` (guidance mode, focused on the diff) and `deepsec` (bounded first pass), and fix any Critical or High finding in the changed code, test-first. Re-run the tests and browser checks, retaking screenshots if the UI changed. Then ship as in 5c.4–6, committing the screenshots with the code. Add a **Code review** section to the PR body with what the review found and what you fixed, and a **Security** section with both results (`security-audit` and `deepsec`): findings fixed, findings and `needs_validation` items left for a person to decide, or "not run, because <reason>". The PR body lists what was built, the checks run and their results, and embeds the screenshots from the branch, so the reviewer can see the result without running it:
       `![step](https://github.com/<owner>/<repo>/blob/<branch>/<path>?raw=true)`. Then request the review and post the stage `review` comment. Don't merge yet.
 
    6. **Once it's approved and merged (step 9), report on the ticket with screenshots** (stage `done`), embedding the images from `main` so the links stay valid:
@@ -282,7 +293,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
    **Addressing requested changes:** read every review comment (`gh api repos/{owner}/{repo}/pulls/<pr>/comments` for line comments, plus the review bodies). Handle them through the `superpowers:receiving-code-review` skill: check each point against the code, fix what's right, and push back with evidence on anything technically wrong rather than agreeing for the sake of it. Each fix is test-first: a failing test for the reported problem, then the fix. Then:
    1. Check out the PR branch: `git fetch origin && git checkout <branch> && git pull --ff-only`.
    2. Make the changes, staying inside the approved plan and "Never destructive". If the feedback changes scope, treat it like plan feedback: reply on the PR and ask.
-   3. **Verify again** the same way as the original build. For 5d that means the chrome-devtools checks again, with fresh screenshots that replace the old ones under the same names.
+   3. **Verify again** the same way as the original build: tests, code review and both security checks (`security-audit` on the new diff, `deepsec`) on the new changes. For 5d that also means the chrome-devtools checks again, with fresh screenshots that replace the old ones under the same names.
    4. Commit and push as **new commits**, never force-push. Then reply on the PR saying what changed for each point, and re-request review: `gh pr edit <pr> --add-reviewer <reviewer>`.
    5. Comment on the issue (stage `review`): `**Updated for review:** #<pr>, addressed: <short list>. Review re-requested from @<reviewer>.`
    6. Return to `main` (5c.6).
