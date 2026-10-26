@@ -55,3 +55,16 @@ test("parseTags: ignores empty entries", () => {
   assert.deepEqual(parseTags(" , home,,"), ["home"]);
   assert.deepEqual(parseTags(""), []);
 });
+
+test("prepareNewTask: a missing repeat is stored as none, with no due date", () => {
+  assert.deepEqual(prepareNewTask({ title: "x", due: "", tags: [] }, "2026-10-26"),
+    { title: "x", status: "active", due: "", tags: [], repeat: "none" });
+});
+
+test("normalize: keeps every supported repeat setting", () => {
+  for (const repeat of ["none", "daily", "weekly", "monthly"]) assert.equal(normalize({ id: 1, title: "x", repeat }).repeat, repeat);
+});
+
+test("normalize: an empty repeat value becomes none", () => {
+  assert.equal(normalize({ id: 1, title: "x", repeat: "" }).repeat, "none");
+});

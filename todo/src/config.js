@@ -7,5 +7,4 @@ export const FILTER_KEY = "todo-app:filter";
 // A task due within this many days (today included) is "due soon".
 export const DUE_SOON_DAYS = 1;
 
-export const STATUSES = ["active", "hold", "done"];
 export const REPEATS = ["none", "daily", "weekly", "monthly"];
