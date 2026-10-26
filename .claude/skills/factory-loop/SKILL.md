@@ -56,6 +56,8 @@ Other stacks follow the same idea in their own idiom (routes / services / models
 - **Test the logic:** every `domain/` function gets unit tests (`node --test tests/`), and they must pass before the PR. Browser checks cover the UI, and unit tests cover the rules.
 - **No build step unless the project already has one.** Native ES modules work in every current browser. Note that they need the page served over HTTP (`npx serve` or `py -3 -m http.server`), so say so in the README.
 
+**This is enforced.** A `PostToolUse` hook (`.claude/hooks/god-object-guard.js`) measures every source file after each write or edit. Over **200 lines** or **15 functions**, it blocks with a "split this file" message. Test, build and vendor files are skipped. Treat a block as a required refactor, not something to work around.
+
 **Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
 
 ## Stage markers: how the loop knows where a ticket stands
