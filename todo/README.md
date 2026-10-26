@@ -27,9 +27,10 @@ The server must send `.js` as `text/javascript`. `npx serve` does. Python's `htt
 ## Test
 
 ```
-cd todo && npm test        # = node --test
+cd todo && npm test                 # = node --test
+cd todo && npm run test:coverage    # tests + 100% coverage gate
 ```
 
-Domain logic (`src/domain/`) is unit-tested. See `CLAUDE.md` for the module map.
+Every file in `src/` has 100% line, branch and function coverage, and `npm run test:coverage` fails if that slips. It also fails for a `src/` file that no test loads. UI and wiring tests run against the real `index.html` in a small fake DOM (`tests/helpers/fake-dom.js`), and storage runs against a fake IndexedDB (`tests/helpers/fake-idb.js`). There are no dependencies. See `CLAUDE.md` for the module map.
 
 > `app.js` and `styles.css` are the pre-#15 single-file version, kept for reference. They're no longer loaded.
