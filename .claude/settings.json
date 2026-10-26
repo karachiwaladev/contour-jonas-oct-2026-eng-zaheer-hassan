@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/log-prompts.js\"; node \"$CLAUDE_PROJECT_DIR/.claude/hooks/auto-commit.js\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
