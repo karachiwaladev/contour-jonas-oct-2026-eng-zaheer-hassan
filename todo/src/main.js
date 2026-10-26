@@ -31,7 +31,9 @@ async function main() {
   bindNewTaskForm(els.form, state.addTask);
   bindFilterBar(els.filterButtons, state.setStatusFilter);
   bindTagClicks(document, { onTag: state.toggleTag, onClear: state.clearTag });
-  bindTaskList(els.list, { onDone: state.setDone, onHold: state.toggleHold, onDelete: state.removeTask });
+  bindTaskList(els.list, {
+    onDone: state.setDone, onHold: state.toggleHold, onStopRepeat: state.stopRepeating, onDelete: state.removeTask,
+  });
   await state.load();
 }
 

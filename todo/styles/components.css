@@ -6,7 +6,7 @@
   padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff;
 }
 .field { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.9rem; }
-.field input { padding: 6px 10px; }
+.field input, .field select { padding: 6px 10px; }
 .field-grow { flex: 1; }
 .field-grow input { flex: 1; min-width: 0; }
 
@@ -51,8 +51,12 @@
 .task-due[data-state="soon"] { color: var(--warn); font-weight: 600; }
 .task-due[data-state="overdue"] { color: var(--danger); font-weight: 600; }
 
-.task-hold, .task-delete {
+.task-repeat-label { color: var(--accent); font-weight: 600; }
+
+.task-repeat, .task-hold, .task-delete {
   border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 4px 8px; border-radius: 6px;
 }
 .task-hold[aria-pressed="true"] { color: var(--hold); background: var(--accent-soft); }
 .task-delete:hover, .task-delete:focus-visible { color: var(--danger); }
+.task-repeat { color: var(--accent); }
+.task-repeat:hover, .task-repeat:focus-visible { color: var(--danger); }

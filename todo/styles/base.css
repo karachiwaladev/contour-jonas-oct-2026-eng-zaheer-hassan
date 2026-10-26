@@ -45,7 +45,7 @@ h1 { margin: 0 0 16px; font-size: 1.75rem; }
 
 button { font: inherit; cursor: pointer; }
 
-input {
+input, select {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;

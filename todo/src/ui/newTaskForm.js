@@ -1,4 +1,5 @@
-// The "add task" form: reads and validates input, hands a new task to onSubmit.
+// The "add task" form: reads and validates input, hands it to onSubmit.
+// Shaping it into a stored task (defaults, due date for repeats) is domain logic.
 import { parseTags } from "../domain/tasks.js";
 
 export function bindNewTaskForm(form, onSubmit) {
@@ -7,7 +8,12 @@ export function bindNewTaskForm(form, onSubmit) {
     e.preventDefault();
     const title = field("title").value.trim();
     if (!title) return;
-    await onSubmit({ title, status: "active", due: field("due").value, tags: parseTags(field("tags").value) });
+    await onSubmit({
+      title,
+      due: field("due").value,
+      tags: parseTags(field("tags").value),
+      repeat: field("repeat").value,
+    });
     form.reset();
     field("title").focus();
   });

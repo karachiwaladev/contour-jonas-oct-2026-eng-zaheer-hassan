@@ -9,13 +9,14 @@ export function renderTaskList({ list, empty, template }, shown, total, opts) {
   empty.textContent = total ? "No tasks match this filter." : "No tasks yet. Add one above.";
 }
 
-// handlers = { onDone(id, checked), onHold(id), onDelete(id) }
+// handlers = { onDone(id, checked), onHold(id), onStopRepeat(id), onDelete(id) }
 export function bindTaskList(list, handlers) {
   list.addEventListener("change", (e) => {
     if (e.target.matches(".task-done")) handlers.onDone(taskId(e.target), e.target.checked);
   });
   list.addEventListener("click", (e) => {
     if (e.target.matches(".task-hold")) handlers.onHold(taskId(e.target));
+    else if (e.target.matches(".task-repeat")) handlers.onStopRepeat(taskId(e.target));
     else if (e.target.matches(".task-delete")) handlers.onDelete(taskId(e.target));
   });
 }

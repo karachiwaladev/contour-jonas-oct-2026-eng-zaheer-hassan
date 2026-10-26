@@ -3,6 +3,7 @@ import { dueState } from "../domain/dates.js";
 import { createChip } from "./chip.js";
 
 const DUE_PREFIX = { overdue: "Overdue · ", soon: "Due soon · " };
+const REPEAT_LABEL = { daily: "⟳ Daily", weekly: "⟳ Weekly", monthly: "⟳ Monthly" };
 
 export function formatDue(due) {
   const [y, m, d] = due.split("-").map(Number);
@@ -16,6 +17,17 @@ function fillDue(li, task, today) {
   due.textContent = (DUE_PREFIX[state] || "Due ") + formatDue(task.due);
   due.dataset.state = state;
   if (state === "overdue" || state === "soon") li.classList.add(`due-${state}`);
+}
+
+// Label + "stop repeating" button. The button is hidden once the task is done:
+// its next occurrence already exists, so stop that one instead.
+function fillRepeat(li, task) {
+  const label = li.querySelector(".task-repeat-label");
+  const stop = li.querySelector(".task-repeat");
+  const repeats = Boolean(REPEAT_LABEL[task.repeat]);
+  if (repeats) label.textContent = REPEAT_LABEL[task.repeat];
+  else label.remove();
+  stop.hidden = !repeats || task.status === "done";
 }
 
 function fillControls(li, task) {
@@ -33,6 +45,7 @@ export function renderTaskItem(template, task, { activeTag, today }) {
   li.dataset.status = task.status;
   li.querySelector(".task-title").textContent = task.title;
   fillControls(li, task);
+  fillRepeat(li, task);
   fillDue(li, task, today);
   li.querySelector(".task-tags").append(...task.tags.map((tag) => createChip(tag, activeTag)));
   return li;
