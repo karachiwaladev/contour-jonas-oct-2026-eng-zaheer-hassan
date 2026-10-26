@@ -1,23 +1,29 @@
 // App state: the task list and the current view. The only module that changes
 // either; UI modules call these actions and re-render on change.
-import { FILTER_KEY } from "./config.js";
+import { FILTER_KEY, PRIORITY_FILTER_KEY, PRIORITIES } from "./config.js";
 import { allTags } from "./domain/filters.js";
 import { today } from "./domain/dates.js";
 import { prepareNewTask } from "./domain/tasks.js";
 import { completeTask, uncompleteTask, stopRepeating } from "./domain/recurrence.js";
 
-function loadFilter() {
-  try { return localStorage.getItem(FILTER_KEY) || "all"; } catch { return "all"; }
+function loadFilter(key) {
+  try { return localStorage.getItem(key) || "all"; } catch { return "all"; }
 }
 
-function saveFilter(status) {
-  try { localStorage.setItem(FILTER_KEY, status); } catch { /* storage blocked: not remembered */ }
+function saveFilter(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* storage blocked: not remembered */ }
+}
+
+// Allow-listed: a stale or tampered saved value falls back to "all".
+function loadPriorityFilter() {
+  const saved = loadFilter(PRIORITY_FILTER_KEY);
+  return PRIORITIES.includes(saved) ? saved : "all";
 }
 
 export function createState(repo) {
   const listeners = [];
   const pending = new Set(); // task ids with a completion write in flight
-  const state = { tasks: [], view: { status: loadFilter(), tag: "" } };
+  const state = { tasks: [], view: { status: loadFilter(FILTER_KEY), tag: "", priority: loadPriorityFilter() } };
 
   const refresh = async () => {
     state.tasks = await repo.all();
@@ -59,7 +65,12 @@ export function createState(repo) {
     stopRepeating: (id) => update(id, (t) => stopRepeating(t)),
     toggleHold: (id) => update(id, (t) => ({ status: t.status === "hold" ? "active" : "hold" })),
     removeTask: async (id) => { await repo.remove(id); await refresh(); },
-    setStatusFilter: async (status) => { state.view.status = status; saveFilter(status); await refresh(); },
+    setStatusFilter: async (status) => { state.view.status = status; saveFilter(FILTER_KEY, status); await refresh(); },
+    setPriorityFilter: async (priority) => {
+      state.view.priority = priority;
+      saveFilter(PRIORITY_FILTER_KEY, priority);
+      await refresh();
+    },
     // Equivalent mutants: refresh() resets any tag no task has to "", so the
     // exact "no tag" value written here can't change what the user sees.
     // Stryker disable next-line StringLiteral: refresh() normalises an unused tag to ""
