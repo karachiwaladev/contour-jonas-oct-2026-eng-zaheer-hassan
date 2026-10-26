@@ -80,6 +80,20 @@ What to do with what they find:
 
 **Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
 
+## Subagents: delegate the heavy steps
+
+A single long pass fills the context with screenshots, DOM dumps, diffs and web pages, until it has to compact. Hand those steps to the project subagents in `.claude/agents/` with the Agent tool, and keep only their short reports. Give each one a tight brief: ticket number, branch, project folder, and the plan's acceptance paths. Don't pass your own conclusions.
+
+| Step | Subagent | What it returns |
+|---|---|---|
+| 5a: answer a question (and follow-ups) | `ticket-researcher` | A draft comment with confidence, citing only sources it opened. You review it and post it. |
+| 5d.3: build independent plan pieces | `tdd-builder` (one per piece; run them in parallel only if they touch different files) | Commits on the ticket branch, with test results. You push. |
+| 5c.3 / 5d.4: browser verification | `browser-verifier` | PASS/FAIL per path, console status, screenshot paths |
+| 5c.3 / 5d.5: code review | `code-reviewer` | Critical / Important / Minor findings, plus a real test run |
+| 5c.3 / 5d.5: security check | `security-reviewer` | security-audit (guidance, diff) findings, needs_validation items, deepsec status |
+
+You still own every gate: what kind of ticket it is, posting comments, fixing findings (test-first), pushing, opening the PR and merging. A subagent's report is input to check, not a verdict. Spot-check a claim before you act on it. Do small things inline: a one-line doc fix doesn't need a builder.
+
 ## Stage markers: how the loop knows where a ticket stands
 
 The loop usually posts under the **same GitHub account** as the person filing and answering tickets, so "who wrote this comment" can't tell the loop's comments apart from the person's replies. Instead, **every comment the loop posts ends with a hidden stage marker**:
