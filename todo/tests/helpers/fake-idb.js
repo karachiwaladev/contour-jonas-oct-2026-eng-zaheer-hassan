@@ -10,40 +10,61 @@ function createStore({ keyPath, autoIncrement }) {
   return { keyPath, autoIncrement, rows: new Map(), nextKey: 1 };
 }
 
+const copy = (v) => (v === undefined ? undefined : structuredClone(v));
+
+// Reads see a snapshot plus this transaction's own writes. Writes are logged
+// and applied to the store only on commit, so a failed transaction writes nothing.
 function createTransaction(db, name) {
   const store = db.stores.get(name);
   const tx = { error: null, oncomplete: null, onerror: null, onabort: null };
+  const view = new Map(store.rows);
+  const writes = [];
   let pending = 0;
-  const settle = () => later(() => {
-    if (pending > 0) return;
-    const failure = db.failNext;
+  let finished = false;
+  let failure = null; // set by a request that fails, e.g. a duplicate add
+  const finish = () => {
+    finished = true;
+    failure ||= db.failNext && { kind: db.failNext, error: new Error(`transaction ${db.failNext}`) };
     db.failNext = null;
-    if (!failure) return tx.oncomplete?.();
-    tx.error = new Error(`transaction ${failure}`);
-    tx[`on${failure}`]?.();
-  });
+    if (!failure) {
+      for (const apply of writes) apply(store.rows);
+      return tx.oncomplete?.();
+    }
+    tx.error = failure.error;
+    tx[`on${failure.kind}`]?.();
+  };
+  const settle = () => later(() => { if (!finished && pending === 0) finish(); });
   const request = (compute) => {
     const req = { result: undefined, onsuccess: null };
     pending++;
     later(() => {
-      req.result = compute();
-      req.onsuccess?.({ target: req });
+      if (!failure) {
+        req.result = compute();
+        if (!failure) req.onsuccess?.({ target: req });
+      }
       pending--;
       settle();
     });
     return req;
   };
-  const copy = (v) => (v === undefined ? undefined : structuredClone(v));
+  const write = (key, value) => {
+    if (value === undefined) view.delete(key); else view.set(key, value);
+    writes.push((rows) => (value === undefined ? rows.delete(key) : rows.set(key, value)));
+  };
   tx.objectStore = () => ({
-    get: (key) => request(() => copy(store.rows.get(key))),
-    getAll: () => request(() => [...store.rows.values()].map(copy)),
+    get: (key) => request(() => copy(view.get(key))),
+    getAll: () => request(() => [...view.values()].map(copy)),
     add: (value) => request(() => {
       const key = value[store.keyPath] ?? store.nextKey++;
-      store.rows.set(key, { ...copy(value), [store.keyPath]: key });
+      if (view.has(key)) {
+        failure = { kind: "abort", error: new Error(`ConstraintError: key ${key} already exists`) };
+        return undefined;
+      }
+      write(key, { ...copy(value), [store.keyPath]: key });
       return key;
     }),
-    put: (value) => request(() => { store.rows.set(value[store.keyPath], copy(value)); return value[store.keyPath]; }),
-    delete: (key) => request(() => { store.rows.delete(key); }),
+    put: (value) => request(() => { write(value[store.keyPath], copy(value)); return value[store.keyPath]; }),
+    delete: (key) => request(() => { write(key, undefined); }),
   });
   settle(); // a transaction with no requests still completes
   return tx;

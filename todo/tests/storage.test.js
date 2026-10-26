@@ -106,3 +106,31 @@ test("repo.uncomplete: revives the task, removing a spawned copy if given", asyn
   await repo.uncomplete(task({ id, title: "again" }), null);
   assert.equal((await repo.all())[0].title, "again");
 });
+
+test("inTransaction: a failed transaction writes nothing (all or none)", async () => {
+  const db = await openDb();
+  db.failNext = "error";
+  await assert.rejects(inTransaction(db, (s) => { s.put(task({ id: 1 })); s.put(task({ id: 2 })); }));
+  assert.deepEqual(await createTaskRepo(db).all(), []);
+});
+
+test("a multi-request transaction completes once and leaves the next failure for the next transaction", async () => {
+  const db = await openDb();
+  let completions = 0;
+  await new Promise((resolve) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put(task({ id: 1 }));
+    tx.objectStore(STORE).put(task({ id: 2 }));
+    tx.oncomplete = () => { completions++; setTimeout(resolve, 20); };
+  });
+  assert.equal(completions, 1);
+  db.failNext = "error";
+  await assert.rejects(inTransaction(db, (s) => s.put(task({ id: 3 }))));
+});
+
+test("add: a duplicate key aborts the transaction", async () => {
+  const db = await openDb();
+  await withStore(db, "readwrite", (s) => s.add(task({ id: 1 })));
+  await assert.rejects(inTransaction(db, (s) => s.add(task({ id: 1, title: "dup" }))), /ConstraintError/);
+  assert.equal((await createTaskRepo(db).all())[0].title, "t");
+});

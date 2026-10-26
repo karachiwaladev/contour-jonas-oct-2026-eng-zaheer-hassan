@@ -90,9 +90,11 @@ test("an action on an unknown task id writes nothing", async () => {
 
 test("setDone: asking for the status a task already has writes nothing", async () => {
   const { repo, state, ids: [id] } = await withTasks({ title: "a" });
+  const writes = [];
+  repo.complete = async () => writes.push("complete");
+  repo.uncomplete = async () => writes.push("uncomplete");
   await state.setDone(id, false);
-  assert.equal(repo.rows.get(id).status, "active");
-  assert.equal(repo.rows.size, 1);
+  assert.deepEqual(writes, []);
 });
 
 test("removeTask: deletes the task", async () => {
