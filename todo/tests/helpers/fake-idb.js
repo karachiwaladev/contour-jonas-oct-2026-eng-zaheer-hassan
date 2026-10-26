@@ -72,8 +72,13 @@ function createTransaction(db, name, mode = "readonly") {
       write(key, { ...copy(value), [store.keyPath]: key });
       return key;
     }),
-    put: (value) => writable() && validKey(value[store.keyPath]) &&
-      request(() => { write(value[store.keyPath], copy(value)); return value[store.keyPath]; }),
+    // With autoIncrement, put() without a key generates one, as add() does.
+    put: (value) => writable() && (store.autoIncrement && value[store.keyPath] === undefined || validKey(value[store.keyPath])) &&
+      request(() => {
+        const key = value[store.keyPath] ?? store.nextKey++;
+        write(key, { ...copy(value), [store.keyPath]: key });
+        return key;
+      }),
     delete: (key) => writable() && validKey(key) && request(() => { write(key, undefined); }),
   });
   settle(); // a transaction with no requests still completes

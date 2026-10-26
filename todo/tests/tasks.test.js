@@ -64,3 +64,7 @@ test("prepareNewTask: a missing repeat is stored as none, with no due date", () 
 test("normalize: keeps every supported repeat setting", () => {
   for (const repeat of ["none", "daily", "weekly", "monthly"]) assert.equal(normalize({ id: 1, title: "x", repeat }).repeat, repeat);
 });
+
+test("normalize: an empty repeat value becomes none", () => {
+  assert.equal(normalize({ id: 1, title: "x", repeat: "" }).repeat, "none");
+});

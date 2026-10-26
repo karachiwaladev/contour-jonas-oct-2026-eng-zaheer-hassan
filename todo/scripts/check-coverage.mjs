@@ -1,9 +1,14 @@
-// Coverage gate: every file under src/ must have 100% line, branch and function
-// coverage from the unit tests, with no blanket ignore comments. Node's own thresholds only judge files a test
-// happened to import, so this also fails on any src file missing from the report.
+// Coverage gate, the first half of `npm run eval`: every file under src/ must
+// have 100% line, branch and function coverage from the unit tests. Node's own
+// thresholds only judge files a test happened to import, so this also fails on
+// any src file missing from the report. It also enforces the eval's anti-cheat
+// rules (scripts/eval-policy.mjs) on src/ comments, stryker.config.mjs and the
+// npm scripts, so neither gate can be quietly weakened.
 import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, mkdirSync, rmSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
+import { pathToFileURL } from "node:url";
+import { ignoreCommentProblems, strykerConfigProblems, scriptProblems } from "./eval-policy.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const LCOV = join(ROOT, "coverage", "lcov.info");
@@ -11,6 +16,14 @@ const LCOV = join(ROOT, "coverage", "lcov.info");
 const SOURCE = /\.[cm]?js$/;
 const listJs = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? listJs(join(dir, e.name)) : SOURCE.test(e.name) ? [join(dir, e.name)] : []);
+
+async function policyProblems() {
+  const { default: stryker } = await import(pathToFileURL(join(ROOT, "stryker.config.mjs")));
+  const { scripts = {} } = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  const comments = listJs(join(ROOT, "src"))
+    .flatMap((file) => ignoreCommentProblems(relative(ROOT, file), readFileSync(file, "utf8")));
+  return [...comments, ...strykerConfigProblems(stryker), ...scriptProblems(scripts)];
+}
 
 function runTests() {
   rmSync(LCOV, { force: true }); // never judge a stale report from an earlier run
@@ -38,25 +51,10 @@ function parseLcov(text) {
   return files;
 }
 
-// node:coverage comments would hide code from the coverage report. A Stryker
-// disable comment is allowed only for one line, named mutators and a reason, so
-// every equivalent mutant is visible and justified in review.
-const STRYKER_OK = /Stryker disable next-line [A-Za-z]+(,[A-Za-z]+)*: \S.{9,}/;
-function ignoreCommentProblems(name, text) {
-  return text.split(/\r?\n/).flatMap((line, i) => {
-    if (line.includes("node:coverage")) return [`${name}:${i + 1}: uses a node:coverage comment`];
-    if (/Stryker\s+(disable|restore)/.test(line) && !STRYKER_OK.test(line)) {
-      return [`${name}:${i + 1}: Stryker comments must be "Stryker disable next-line <Mutator>: <reason>"`];
-    }
-    return [];
-  });
-}
-
-function gaps(report) {
+function coverageProblems(report) {
   const problems = [];
   for (const file of listJs(join(ROOT, "src"))) {
     const name = relative(ROOT, file);
-    problems.push(...ignoreCommentProblems(name, readFileSync(file, "utf8")));
     const c = report[resolve(file)];
     if (!c) { problems.push(`${name}: never loaded by any test`); continue; }
     for (const [kind, found, hit] of [["lines", "LF", "LH"], ["branches", "BRF", "BRH"], ["functions", "FNF", "FNH"]]) {
@@ -66,18 +64,16 @@ function gaps(report) {
   return problems;
 }
 
-if (runTests() !== 0) {
-  console.error("\nCoverage gate: tests failed.");
+function fail(title, problems) {
+  console.error(`\n${title}\n  ${problems.join("\n  ")}`);
   process.exit(1);
 }
+
+const policy = await policyProblems();
+if (policy.length) fail("Eval policy FAILED: an exclusion or setting would weaken the gates.", policy);
+if (runTests() !== 0) fail("Coverage gate FAILED:", ["tests failed"]);
 let lcov;
-try { lcov = readFileSync(LCOV, "utf8"); } catch {
-  console.error(`\nCoverage gate: no coverage report was written to ${LCOV}.`);
-  process.exit(1);
-}
-const problems = gaps(parseLcov(lcov));
-if (problems.length) {
-  console.error(`\nCoverage gate FAILED: src/ must be 100% covered.\n  ${problems.join("\n  ")}`);
-  process.exit(1);
-}
+try { lcov = readFileSync(LCOV, "utf8"); } catch { fail("Coverage gate FAILED:", [`no report was written to ${LCOV}`]); }
+const gaps = coverageProblems(parseLcov(lcov));
+if (gaps.length) fail("Coverage gate FAILED: src/ must be 100% covered.", gaps);
 console.log("\nCoverage gate passed: every file in src/ is 100% covered (lines, branches, functions).");

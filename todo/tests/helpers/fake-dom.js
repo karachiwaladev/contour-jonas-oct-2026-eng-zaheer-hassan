@@ -89,7 +89,8 @@ class FakeDocument extends FakeElement {
     this.activeElement = null;
   }
   createElement(tag) {
-    if (!/^[a-z][a-z0-9-]*$/i.test(tag)) throw Object.assign(new Error(`InvalidCharacterError: "${tag}"`), { name: "InvalidCharacterError" });
+    // Browsers reject an empty name or one with whitespace, quotes, "/", ">" or "=".
+    if (!/^[a-z][^\s"'/>=]*$/i.test(tag)) throw Object.assign(new Error(`InvalidCharacterError: "${tag}"`), { name: "InvalidCharacterError" });
     return new FakeElement(this, tag);
   }
   getElementById(id) { return id ? this.querySelector(`#${id}`) : null; }

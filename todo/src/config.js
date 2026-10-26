@@ -7,5 +7,4 @@ export const FILTER_KEY = "todo-app:filter";
 // A task due within this many days (today included) is "due soon".
 export const DUE_SOON_DAYS = 1;
 
-// Stryker disable next-line StringLiteral: normalize() falls back to "none" for any unknown value, so mutating "none" here is equivalent
 export const REPEATS = ["none", "daily", "weekly", "monthly"];

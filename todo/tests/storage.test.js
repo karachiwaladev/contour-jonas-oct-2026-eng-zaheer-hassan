@@ -144,3 +144,9 @@ test("openDb: tasks live in the 'todo-app' database's 'tasks' store, keyed by an
   assert.deepEqual({ ...db.stores.get("tasks"), rows: undefined, nextKey: undefined },
     { keyPath: "id", autoIncrement: true, rows: undefined, nextKey: undefined });
 });
+
+test("fake IndexedDB: put without a key on an auto-increment store generates one, like a browser", async () => {
+  const db = await openDb();
+  const id = await withStore(db, "readwrite", (s) => s.put(task()));
+  assert.equal(typeof id, "number");
+});

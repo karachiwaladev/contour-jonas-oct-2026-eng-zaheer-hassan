@@ -25,6 +25,7 @@ Layers only call downward: `ui → state → domain / storage`.
 | `tests/helpers/` | Test fakes: `fake-dom.js` (+ `parse-html.js`, loads the real `index.html`), `fake-idb.js`, `memory-repo.js` |
 | `scripts/check-coverage.mjs` | `npm run test:coverage`: fails unless every `src/` file is 100% covered, with no blanket ignore comments |
 | `stryker.config.mjs` | `npm run test:mutation`: Stryker mutation testing, break threshold 100% |
+| `scripts/eval-policy.mjs` | Anti-cheat rules the gate enforces: only justified one-line Stryker exclusions, a locked Stryker config, and real npm scripts (tested in `tests/eval-policy.test.js`) |
 
 ## Conventions
 
