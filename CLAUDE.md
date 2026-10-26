@@ -54,7 +54,7 @@ Keep this table in sync whenever a project or factory tool is added, renamed or 
 
 | Project | Path | Status | Summary |
 |---------|------|--------|---------|
-| _(none yet)_ | `projects/` | — | Add a row when the first project lands |
+| todo | `todo/` | Active | Browser todo app (IndexedDB, native ES modules): due dates, tags, status filters, recurring tasks. Read `todo/CLAUDE.md` before touching it |
 
 ## Ground rules
 
