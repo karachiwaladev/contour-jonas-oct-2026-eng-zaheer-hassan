@@ -13,6 +13,7 @@ export function bindNewTaskForm(form, onSubmit) {
       due: field("due").value,
       tags: parseTags(field("tags").value),
       repeat: field("repeat").value,
+      priority: field("priority").value,
     });
     form.reset();
     field("title").focus();

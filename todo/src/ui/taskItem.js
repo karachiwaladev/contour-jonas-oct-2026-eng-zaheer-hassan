@@ -1,6 +1,7 @@
 // Renders one task <li> from the #task-template markup.
 import { dueState } from "../domain/dates.js";
 import { createChip } from "./chip.js";
+import { fillPriorityBadge } from "./priorityBadge.js";
 
 const DUE_PREFIX = { overdue: "Overdue · ", soon: "Due soon · " };
 const REPEAT_LABEL = { daily: "⟳ Daily", weekly: "⟳ Weekly", monthly: "⟳ Monthly" };
@@ -45,6 +46,7 @@ export function renderTaskItem(template, task, { activeTag, today }) {
   li.dataset.status = task.status;
   li.querySelector(".task-title").textContent = task.title;
   fillControls(li, task);
+  fillPriorityBadge(li.querySelector(".task-priority"), task.priority);
   fillRepeat(li, task);
   fillDue(li, task, today);
   li.querySelector(".task-tags").append(...task.tags.map((tag) => createChip(tag, activeTag)));

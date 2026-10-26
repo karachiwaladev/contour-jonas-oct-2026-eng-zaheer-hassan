@@ -6,6 +6,12 @@ import { parseHtml } from "./parse-html.js";
 const text = (value) => ({ nodeType: 3, value: String(value) });
 const isEl = (n) => n.nodeType === 1;
 
+// A <select> resets to its option marked selected, else its first option.
+function defaultOption(select) {
+  const options = select.querySelectorAll("option");
+  return (options.find((o) => o.getAttribute("selected") !== null) ?? options[0])?.value ?? "";
+}
+
 class FakeElement {
   constructor(doc, tagName, attrs = {}) {
     Object.assign(this, { nodeType: 1, doc, tagName: tagName.toUpperCase(), childNodes: [], parent: null });
@@ -77,7 +83,7 @@ class FakeElement {
   focus() { this.doc.activeElement = this; }
   reset() {
     for (const el of this.descendants()) {
-      el.value = el.tagName === "SELECT" ? (el.querySelector("option")?.value ?? "") : el.defaultValue;
+      el.value = el.tagName === "SELECT" ? defaultOption(el) : el.defaultValue;
     }
   }
 }

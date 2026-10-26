@@ -23,6 +23,14 @@
           <input id="task-due" name="due" type="date">
         </label>
         <label class="field">
+          <span>Priority</span>
+          <select id="task-priority" name="priority">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </label>
+        <label class="field">
           <span>Repeat</span>
           <select id="task-repeat" name="repeat">
             <option value="none">None</option>
@@ -45,6 +53,13 @@
       <button type="button" class="filter" data-status="done">Completed <span class="count"></span></button>
     </nav>
 
+    <nav class="filters" aria-label="Filter by priority">
+      <button type="button" class="priority-filter" data-priority="all">Any priority <span class="count"></span></button>
+      <button type="button" class="priority-filter" data-priority="high">High <span class="count"></span></button>
+      <button type="button" class="priority-filter" data-priority="medium">Medium <span class="count"></span></button>
+      <button type="button" class="priority-filter" data-priority="low">Low <span class="count"></span></button>
+    </nav>
+
     <div id="tag-filter" class="tag-filter" aria-label="Filter by tag" hidden></div>
 
     <ul id="task-list" class="task-list" aria-live="polite"></ul>
@@ -59,6 +74,7 @@
         <span class="task-body">
           <span class="task-title"></span>
           <span class="task-meta">
+            <span class="task-priority"></span>
             <span class="task-repeat-label"></span>
             <span class="task-due"></span>
             <span class="task-tags"></span>

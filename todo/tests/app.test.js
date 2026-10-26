@@ -102,3 +102,15 @@ test("startApp: the list marks the active tag and highlights tasks due today", a
   assert.equal(li.querySelector(".chip").getAttribute("aria-pressed"), "true");
   assert.ok(li.classList.contains("due-soon"));
 });
+
+test("startApp: priority badges, counts and the priority filter are wired to state", async () => {
+  await startApp(doc);
+  await addTask({ title: "Fire", priority: "high" });
+  await addTask({ title: "Chores" });
+  const buttons = doc.querySelectorAll(".priority-filter");
+  assert.deepEqual(buttons.map((b) => b.querySelector(".count").textContent), ["2", "1", "1", "0"]);
+  assert.deepEqual($("task-list").children.map((li) => li.querySelector(".task-priority").textContent), ["High", "Medium"]);
+  await act(buttons[1], "click");
+  assert.deepEqual(titles(), ["Fire"]);
+  assert.equal(buttons[1].getAttribute("aria-pressed"), "true");
+});
