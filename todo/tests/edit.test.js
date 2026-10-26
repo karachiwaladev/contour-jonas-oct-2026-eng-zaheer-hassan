@@ -62,3 +62,9 @@ test("applyEdit: moving a daily or weekly task's due date adds no anchor day", (
   const daily = { id: 1, title: "x", status: "active", due: "2026-11-01", tags: [], priority: "low", repeat: "daily" };
   assert.deepEqual(applyEdit(daily, input({ title: "x", priority: "low", due: "2026-11-20", tags: "" })), { ...daily, due: "2026-11-20" });
 });
+
+test("applyEdit: a monthly task clamped to a short month keeps its anchor day when the due date is unchanged", () => {
+  const clamped = { ...task, due: "2026-02-28", repeatDay: 31 };
+  assert.equal(applyEdit(clamped, input({ due: "2026-02-28", title: "Rent" })).repeatDay, 31);
+  assert.equal(applyEdit(clamped, input({ due: "", title: "Rent" })).repeatDay, 31);
+});
