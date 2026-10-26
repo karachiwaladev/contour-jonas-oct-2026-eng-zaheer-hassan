@@ -80,6 +80,8 @@ What to do with what they find:
 
 **This is enforced.** A `PostToolUse` hook (`.claude/hooks/god-object-guard.js`) measures every source file after each write or edit. Over **200 lines** or **15 functions**, it blocks with a "split this file" message. Test, build and vendor files are skipped. Treat a block as a required refactor, not something to work around.
 
+**The quality gate is enforced too.** A `PreToolUse` hook (`.claude/hooks/quality-gate.js`) runs on every `gh pr create`: it runs `npm run eval` (100% coverage gate, then Stryker mutation testing at a 100% break threshold) in each project the branch changes that defines one, and blocks the PR on any failure, showing the tail of the output. Mutation testing takes about a minute for `todo/`. Run `npm run eval` yourself during the build so the gate holds no surprises; if it blocks, add the missing tests and open the PR again.
+
 **Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
 
 ## Subagents: delegate the heavy steps
