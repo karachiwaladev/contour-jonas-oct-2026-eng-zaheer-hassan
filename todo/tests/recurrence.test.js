@@ -47,11 +47,11 @@ test("completeTask: a one-off task is just marked done", () => {
 });
 
 test("completeTask: a recurring task is marked done and spawns the next copy", () => {
-  const task = { id: 7, title: "Water plants", status: "active", due: "2026-10-26", tags: ["home"], repeat: "weekly", createdAt: 1 };
+  const task = { id: 7, title: "Water plants", status: "active", due: "2026-10-26", tags: ["home"], repeat: "weekly", priority: "low", createdAt: 1 };
   const { completed, next } = completeTask(task, TODAY);
   assert.equal(completed.status, "done");
   assert.equal(completed.id, 7);
-  assert.deepEqual(next, { title: "Water plants", status: "active", due: "2026-11-02", tags: ["home"], repeat: "weekly" });
+  assert.deepEqual(next, { title: "Water plants", status: "active", due: "2026-11-02", tags: ["home"], repeat: "weekly", priority: "low" });
 });
 
 test("completeTask: an on-hold recurring task also spawns its next copy as active", () => {
