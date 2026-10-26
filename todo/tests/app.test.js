@@ -114,3 +114,31 @@ test("startApp: priority badges, counts and the priority filter are wired to sta
   assert.deepEqual(titles(), ["Fire"]);
   assert.equal(buttons[1].getAttribute("aria-pressed"), "true");
 });
+
+test("startApp: a task can be edited inline; blank titles are refused and Cancel closes", async () => {
+  await startApp(doc);
+  await addTask({ title: "Pay rent", tags: "home" });
+  await addTask({ title: "Other" });
+  const li = () => $("task-list").children[0];
+  const form = () => li().querySelector(".edit-form");
+  const set = (name, value) => { form().elements.namedItem(name).value = value; };
+
+  await act(li().querySelector(".task-edit"), "click");
+  assert.equal(form().elements.namedItem("title").value, "Pay rent");
+  set("title", "   ");
+  await act(form(), "submit");
+  assert.ok(form(), "a blank title keeps the form open");
+
+  await act(li().querySelector(".edit-cancel"), "click");
+  assert.equal(form(), null);
+  assert.deepEqual(titles(), ["Pay rent", "Other"]);
+
+  await act(li().querySelector(".task-edit"), "click");
+  set("title", "Pay the rent");
+  set("priority", "high");
+  set("tags", "bills");
+  await act(form(), "submit");
+  assert.deepEqual(titles(), ["Pay the rent", "Other"]);
+  assert.equal(li().querySelector(".task-priority").textContent, "High");
+  assert.deepEqual($("tag-filter").children.map((c) => c.textContent), ["#bills"]);
+});

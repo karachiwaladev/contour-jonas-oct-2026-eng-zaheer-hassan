@@ -37,6 +37,7 @@ function fillControls(li, task) {
   hold.setAttribute("aria-pressed", String(task.status === "hold"));
   hold.title = task.status === "hold" ? "Resume" : "Put on hold";
   hold.hidden = task.status === "done";
+  li.querySelector(".task-edit").setAttribute("aria-label", `Edit "${task.title}"`);
   li.querySelector(".task-delete").setAttribute("aria-label", `Delete "${task.title}"`);
 }
 

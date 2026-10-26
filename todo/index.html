@@ -82,9 +82,39 @@
         </span>
       </label>
       <button type="button" class="task-repeat" title="Stop repeating (can't be undone)" aria-label="Stop repeating (can't be undone)">⟳</button>
+      <button type="button" class="task-edit" aria-label="Edit task" title="Edit">✎</button>
       <button type="button" class="task-hold" aria-pressed="false" title="Put on hold">⏸</button>
       <button type="button" class="task-delete" aria-label="Delete task">✕</button>
     </li>
+  </template>
+
+  <template id="edit-template">
+    <form class="edit-form" autocomplete="off">
+      <label class="field field-grow">
+        <span>Title</span>
+        <input name="title" type="text" required maxlength="200">
+      </label>
+      <label class="field">
+        <span>Priority</span>
+        <select name="priority">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Due</span>
+        <input name="due" type="date">
+      </label>
+      <label class="field field-grow">
+        <span>Tags</span>
+        <input name="tags" type="text" placeholder="work, urgent" maxlength="200">
+      </label>
+      <div class="edit-actions">
+        <button type="submit" class="edit-save">Save</button>
+        <button type="button" class="edit-cancel">Cancel</button>
+      </div>
+    </form>
   </template>
 
   <script type="module" src="src/main.js"></script>
