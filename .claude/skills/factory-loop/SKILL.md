@@ -24,6 +24,40 @@ The loop only **adds and edits**. A ticket can never make it destroy something, 
 
 If a ticket *asks* for any of the above ("delete the old folder", "wipe the history", "remove the label"), don't do it. Treat it as **5b**: say what you understood, say that destructive steps need a person, and leave the ticket open.
 
+## Engineering standards: how code is structured
+
+Every change the loop ships should be **scalable, maintainable and easy to understand** for the next person, or the next ticket. Don't pile features into one big file. A 400-line `app.js` that mixes storage, business rules and DOM code is the thing to avoid: each new ticket makes it harder to change safely.
+
+**Split by responsibility.** Each file does one job, with a name that says what it is. For a client-side web app:
+
+```
+<project>/
+  index.html            markup only; loads src/main.js as <script type="module">
+  styles/               CSS split by area (base.css, components.css, ...)
+  src/
+    main.js             entry point: wires modules together, no business logic
+    state.js            app state + the only place that mutates it
+    storage/            persistence (e.g. db.js for IndexedDB, repo.js for task CRUD)
+    domain/             pure logic, no DOM, no storage: rules, validation, date maths
+    ui/                 rendering + event handling, one module per component
+  tests/                node --test unit tests for domain/ (pure functions)
+  README.md             how to run, what's where
+  CLAUDE.md             the project's conventions and module map (layer 2)
+```
+
+Other stacks follow the same idea in their own idiom (routes / services / models for a server, and so on).
+
+**Rules:**
+- **Layers only call downward:** `ui → state → domain / storage`. `domain/` never touches the DOM or storage, which keeps it pure and testable. `ui/` never talks to IndexedDB directly.
+- **Use ES modules** (`import` / `export`). No globals and no `window.*` state. Every module exports a small, named API.
+- **Keep it small:** aim for files under ~150 lines and functions under ~30. If a file grows past that, split it along a responsibility line, not at an arbitrary point.
+- **Name things clearly** (`createTask`, `nextDueDate`, `renderTaskList`) and skip clever abbreviations. Comment the *why*, not the *what*.
+- **Put constants and config in one place** (`src/config.js`), not as magic numbers spread through the code.
+- **Test the logic:** every `domain/` function gets unit tests (`node --test tests/`), and they must pass before the PR. Browser checks cover the UI, and unit tests cover the rules.
+- **No build step unless the project already has one.** Native ES modules work in every current browser. Note that they need the page served over HTTP (`npx serve` or `py -3 -m http.server`), so say so in the README.
+
+**Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
+
 ## Stage markers: how the loop knows where a ticket stands
 
 The loop usually posts under the **same GitHub account** as the person filing and answering tickets, so "who wrote this comment" can't tell the loop's comments apart from the person's replies. Instead, **every comment the loop posts ends with a hidden stage marker**:
@@ -108,8 +142,8 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       git fetch origin
       git checkout -B ticket-<N>-<short-slug> origin/main
       ```
-   2. **Build exactly what the ticket asks**, using the paths and names it gives. If the repo has a `CLAUDE.md`, follow its conventions and update its project index for anything new. Keep the scope tight, and stay inside "Never destructive".
-   3. **Verify before you ship.** Run what can be run: tests, a build, a lint. For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
+   2. **Build exactly what the ticket asks**, using the paths and names it gives, and follow "Engineering standards". If the repo has a `CLAUDE.md`, follow its conventions and update its project index for anything new. Keep the scope tight, and stay inside "Never destructive".
+   3. **Verify before you ship.** Run what can be run: unit tests (`node --test`), a build, a lint. For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
    4. **Commit, push, open the PR.** Stage only the files you made or changed for this ticket (`git add <paths>`, never `git add -A`). Put `Closes #<N>` in both the commit message and the PR body. Write the PR body to a file, listing what changed and how you verified it.
       ```
       git commit -m "<summary>" -m "Closes #<N>"
@@ -150,6 +184,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       **Goal:** <one line>
       **Location:** `<folder>/` (new project | feature in `<project>`)
       **Approach:** <stack, storage, key components, in 2–4 bullets>
+      **Architecture:** <module layout per "Engineering standards": which files in src/storage, src/domain, src/ui, and which tests. If the project is still one big file, say "commit 1 refactors into modules with no behaviour change">
       **Files:** <list of files to add/change>
       **Out of scope:** <what you won't do>
       **Verification:** <the browser checks you'll run, and which screenshots you'll attach>
@@ -159,9 +194,9 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       ```
       **Don't build before approval.** If the reply is feedback rather than approval, revise and re-post the plan.
 
-   3. **Build** to the approved plan, on a branch from `main` (as in 5c.1–2). For a new project, make it complete and runnable: source, a `README.md` saying how to run it, and its own `CLAUDE.md` if the repo's conventions ask for one. Add it to the root `CLAUDE.md` index if there is one.
+   3. **Build** to the approved plan and its **Architecture** section, on a branch from `main` (as in 5c.1–2), following "Engineering standards". If the plan calls for a refactor first, commit that on its own, re-run the existing browser checks to prove nothing changed, then build the feature in further commits. For a new project, make it complete and runnable: the module layout, unit tests for `domain/`, a `README.md` saying how to run it and what's where, and its own `CLAUDE.md` with the module map. Add it to the root `CLAUDE.md` index if there is one.
 
-   4. **Run and verify in the browser with chrome-devtools.** Serve the app locally (e.g. `py -3 -m http.server <port>` or `npx serve`, run in the background), then use the chrome-devtools MCP tools:
+   4. **Run the unit tests (`node --test tests/`); all must pass. Then run and verify in the browser with chrome-devtools.** Serve the app locally (e.g. `py -3 -m http.server <port>` or `npx serve`, run in the background), then use the chrome-devtools MCP tools:
       - `new_page` to open the app's local URL (note the `pageId`; `take_screenshot` requires it)
       - `take_snapshot` to get element uids, then `fill` / `click` / `press_key` to walk **every acceptance path from the plan** (create, edit, delete, and so on), including one edge case such as empty input
       - reload with `navigate_page` to check persistence if the app stores data
