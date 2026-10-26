@@ -56,6 +56,15 @@ Other stacks follow the same idea in their own idiom (routes / services / models
 - **Test the logic:** every `domain/` function gets unit tests (`node --test tests/`), and they must pass before the PR. Browser checks cover the UI, and unit tests cover the rules.
 - **No build step unless the project already has one.** Native ES modules work in every current browser. Note that they need the page served over HTTP (`npx serve` or `py -3 -m http.server`), so say so in the README.
 
+**Test-driven development (TDD), always.** Invoke the `superpowers:test-driven-development` skill before writing any feature or fix code, and follow it for every behaviour you add:
+1. **Red:** write one small failing test for the next behaviour (`tests/<module>.test.js`, run with `node --test`). Run it and **see it fail for the right reason**. A test that has never failed proves nothing.
+2. **Green:** write the minimum code to pass it. Run the tests again; all must pass.
+3. **Refactor:** clean up names and duplication with the tests green. Re-run them.
+
+Repeat for each behaviour in the plan. Domain logic (`src/domain/`) is always test-first. UI wiring is covered by the chrome-devtools checks. For a bug fix, the first test reproduces the bug. For a refactor of untested code, write **characterisation tests** of the current behaviour first, so the refactor is proven not to change it.
+
+**Code review before every PR.** Once the build is green and verified, invoke the `superpowers:requesting-code-review` skill on the branch's diff against `main`. Fix every **Critical** and **Important** finding, re-run the tests and checks, and note anything **Minor** you chose not to fix (with the reason) in the PR body under **Code review**. Don't open the PR with an unaddressed Critical or Important finding.
+
 **This is enforced.** A `PostToolUse` hook (`.claude/hooks/god-object-guard.js`) measures every source file after each write or edit. Over **200 lines** or **15 functions**, it blocks with a "split this file" message. Test, build and vendor files are skipped. Treat a block as a required refactor, not something to work around.
 
 **Existing code that doesn't meet this:** when a ticket adds a feature to a project that's still one big file, the first commit in the PR is a **behaviour-preserving refactor** into the structure above, verified to work exactly as before. The feature lands in later commits. Say so in the plan. Moving code into modules is an edit, not a deletion, so it stays inside "Never destructive". Don't refactor projects the ticket doesn't touch.
@@ -144,8 +153,8 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       git fetch origin
       git checkout -B ticket-<N>-<short-slug> origin/main
       ```
-   2. **Build exactly what the ticket asks**, using the paths and names it gives, and follow "Engineering standards". If the repo has a `CLAUDE.md`, follow its conventions and update its project index for anything new. Keep the scope tight, and stay inside "Never destructive".
-   3. **Verify before you ship.** Run what can be run: unit tests (`node --test`), a build, a lint. For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
+   2. **Build exactly what the ticket asks**, using the paths and names it gives, and follow "Engineering standards". For code, that means **TDD** (red, green, refactor) through `superpowers:test-driven-development`. If the repo has a `CLAUDE.md`, follow its conventions and update its project index for anything new. Keep the scope tight, and stay inside "Never destructive".
+   3. **Verify, then get a code review, before you ship.** Run what can be run: unit tests (`node --test`), a build, a lint. Then run `superpowers:requesting-code-review` on the diff and fix every Critical or Important finding. For a doc with constraints ("under 100 lines"), measure them. A PR you never ran is a guess.
    4. **Commit, push, open the PR.** Stage only the files you made or changed for this ticket (`git add <paths>`, never `git add -A`). Put `Closes #<N>` in both the commit message and the PR body. Write the PR body to a file, listing what changed and how you verified it.
       ```
       git commit -m "<summary>" -m "Closes #<N>"
@@ -189,6 +198,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       **Architecture:** <module layout per "Engineering standards": which files in src/storage, src/domain, src/ui, and which tests. If the project is still one big file, say "commit 1 refactors into modules with no behaviour change">
       **Files:** <list of files to add/change>
       **Out of scope:** <what you won't do>
+      **Tests (TDD):** <the behaviours you'll drive test-first, e.g. "nextDueDate: daily / weekly / monthly / month-end / skips past dates">
       **Verification:** <the browser checks you'll run, and which screenshots you'll attach>
 
       Reply **approve** to build, or tell me what to change.
@@ -196,7 +206,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       ```
       **Don't build before approval.** If the reply is feedback rather than approval, revise and re-post the plan.
 
-   3. **Build** to the approved plan and its **Architecture** section, on a branch from `main` (as in 5c.1–2), following "Engineering standards". If the plan calls for a refactor first, commit that on its own, re-run the existing browser checks to prove nothing changed, then build the feature in further commits. For a new project, make it complete and runnable: the module layout, unit tests for `domain/`, a `README.md` saying how to run it and what's where, and its own `CLAUDE.md` with the module map. Add it to the root `CLAUDE.md` index if there is one.
+   3. **Build** to the approved plan and its **Architecture** and **Tests** sections, on a branch from `main` (as in 5c.1–2), following "Engineering standards". Use **TDD** through `superpowers:test-driven-development`: for each planned behaviour, write the failing test, watch it fail, make it pass, then refactor. If the plan calls for a refactor first, pin the current behaviour with characterisation tests, then do the refactor in a commit of its own. Re-run those tests and the existing browser checks to prove nothing changed, then build the feature test-first in further commits. For a new project, make it complete and runnable: the module layout, unit tests for `domain/`, a `README.md` saying how to run it and what's where, and its own `CLAUDE.md` with the module map. Add it to the root `CLAUDE.md` index if there is one.
 
    4. **Run the unit tests (`node --test tests/`); all must pass. Then run and verify in the browser with chrome-devtools.** Serve the app locally (e.g. `py -3 -m http.server <port>` or `npx serve`, run in the background), then use the chrome-devtools MCP tools:
       - `new_page` to open the app's local URL (note the `pageId`; `take_screenshot` requires it)
@@ -207,7 +217,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
 
       Stop the local server afterwards. If any check fails, fix it and re-run all the checks. Never ship an unverified build.
 
-   5. **Ship it for review** as in 5c.4–6, committing the screenshots with the code. The PR body lists what was built, the checks run and their results, and embeds the screenshots from the branch, so the reviewer can see the result without running it:
+   5. **Code review, then ship it for review.** Run `superpowers:requesting-code-review` on the branch diff, fix the Critical and Important findings, and re-run the tests and browser checks, retaking screenshots if the UI changed. Then ship as in 5c.4–6, committing the screenshots with the code. Add a **Code review** section to the PR body with what the review found and what you fixed. The PR body lists what was built, the checks run and their results, and embeds the screenshots from the branch, so the reviewer can see the result without running it:
       `![step](https://github.com/<owner>/<repo>/blob/<branch>/<path>?raw=true)`. Then request the review and post the stage `review` comment. Don't merge yet.
 
    6. **Once it's approved and merged (step 9), report on the ticket with screenshots** (stage `done`), embedding the images from `main` so the links stay valid:
@@ -269,7 +279,7 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
    | Approved but conflicting or failing checks | Don't force it. Comment on the PR with the cause and skip. A person needs to look. |
    | Review still pending | Waiting on the reviewer. Skip. |
 
-   **Addressing requested changes:** read every review comment (`gh api repos/{owner}/{repo}/pulls/<pr>/comments` for line comments, plus the review bodies). Then:
+   **Addressing requested changes:** read every review comment (`gh api repos/{owner}/{repo}/pulls/<pr>/comments` for line comments, plus the review bodies). Handle them through the `superpowers:receiving-code-review` skill: check each point against the code, fix what's right, and push back with evidence on anything technically wrong rather than agreeing for the sake of it. Each fix is test-first: a failing test for the reported problem, then the fix. Then:
    1. Check out the PR branch: `git fetch origin && git checkout <branch> && git pull --ff-only`.
    2. Make the changes, staying inside the approved plan and "Never destructive". If the feedback changes scope, treat it like plan feedback: reply on the PR and ask.
    3. **Verify again** the same way as the original build. For 5d that means the chrome-devtools checks again, with fresh screenshots that replace the old ones under the same names.
