@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <h1>Todo</h1>
+
+    <form id="new-task" class="new-task" autocomplete="off">
+      <label for="task-title" class="visually-hidden">New task</label>
+      <input id="task-title" name="title" type="text" placeholder="What needs doing?" required maxlength="200">
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="task-list" class="task-list" aria-live="polite"></ul>
+    <p id="empty" class="empty" hidden>No tasks yet. Add one above.</p>
+    <p id="summary" class="summary"></p>
+  </main>
+
+  <template id="task-template">
+    <li class="task">
+      <label class="task-main">
+        <input type="checkbox" class="task-done">
+        <span class="task-title"></span>
+      </label>
+      <button type="button" class="task-delete" aria-label="Delete task">✕</button>
+    </li>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
