@@ -8,18 +8,19 @@ Layers only call downward: `ui → state → domain / storage`.
 
 | Path | Role |
 |------|------|
-| `index.html` | Markup only; `#task-template` is the task row. Loads `src/main.js` as a module |
+| `index.html` | Markup only; `#task-template` is the task row, `#edit-template` its inline edit form. Loads `src/main.js` as a module |
 | `src/main.js` | Bootstrap loaded by `index.html`: calls `startApp(document)` |
 | `src/startApp.js` | Wiring: storage, then state, then UI, for a given document. No business rules |
-| `src/config.js` | Constants (DB name, store, filter key, due-soon window, repeats) |
-| `src/state.js` | Task list and view (status + tag). The only place that changes them |
+| `src/config.js` | Constants (DB name, store, filter keys, due-soon window, repeats, priorities) |
+| `src/state.js` | Task list and view (status + tag + priority filter, both filters remembered). Actions incl. `editTask`, `setPriorityFilter`. The only place that changes them |
 | `src/storage/db.js` | IndexedDB open and transaction helpers (`withStore`, multi-request `inTransaction`) |
 | `src/storage/taskRepo.js` | Task create/read/update/delete, normalising on read. Atomic, idempotent `complete` and `uncomplete` |
 | `src/domain/dates.js` | Local-day `YYYY-MM-DD` arithmetic, `dueState` |
-| `src/domain/tasks.js` | `normalize` (legacy shapes), `parseTags`, `prepareNewTask` |
-| `src/domain/filters.js` | Counts, tag catalogue, status/tag filtering |
+| `src/domain/tasks.js` | `normalize` (legacy shapes), `normalizePriority`, `parseTags`, `prepareNewTask` |
+| `src/domain/edit.js` | `applyEdit`: title/priority/due/tags only; blank title returns `null` |
+| `src/domain/filters.js` | Counts by status and priority, tag catalogue, status/tag/priority filtering |
 | `src/domain/recurrence.js` | `nextDueDate` (monthly anchor day), `completeTask`, `uncompleteTask`, `stopRepeating` |
-| `src/ui/*.js` | One module per component: task item, list, filter bar, tag row, form, chip |
+| `src/ui/*.js` | One module per component: task item, list, filter bar, priority filter, priority badge, tag row, form, edit form, chip |
 | `styles/base.css` / `styles/components.css` | Tokens and elements / component styles |
 | `tests/*.test.js` | `node --test` unit tests for every `src/` module |
 | `tests/helpers/` | Test fakes: `fake-dom.js` (+ `parse-html.js`, loads the real `index.html`), `fake-idb.js`, `memory-repo.js` |
@@ -30,9 +31,9 @@ Layers only call downward: `ui → state → domain / storage`.
 ## Conventions
 
 - **Dates** are local calendar days as `"YYYY-MM-DD"` strings. Never `new Date("YYYY-MM-DD")`, which parses as UTC; use `fromIso`/`toIso`. Pass `today` in, so logic is testable.
-- **Task shape:** `{ id, title, status: "active"|"hold"|"done", due, tags[], repeat: "none"|"daily"|"weekly"|"monthly", repeatDay?, nextId?, createdAt }`.
+- **Task shape:** `{ id, title, status: "active"|"hold"|"done", due, tags[], repeat: "none"|"daily"|"weekly"|"monthly", priority: "high"|"medium"|"low", repeatDay?, nextId?, createdAt }`.
   - `repeatDay` is the monthly anchor day. `nextId` links a completed recurring task to the occurrence it spawned, so unticking it can undo that.
-  - New fields need a default in `normalize` so old data keeps working. Unknown `repeat` values normalise to `"none"`.
+  - New fields need a default in `normalize` so old data keeps working. Unknown `repeat` values normalise to `"none"`, unknown `priority` to `"medium"`.
 - **Completion** goes through `state.setDone`, which runs one write per task at a time, and `repo.complete` / `repo.uncomplete`, each a single transaction. Never complete a task with separate `put` + `add` calls.
 - **New rules** go in `src/domain/`, test-first. `ui/` only renders and forwards events.
 - **Coverage and mutation score are 100% and must stay there.** Run `npm run eval` (coverage gate + Stryker) before every PR. A new `src/` file needs tests that load it. Test UI against the fake DOM and storage against the fake IndexedDB, not by excluding files.
@@ -41,4 +42,4 @@ Layers only call downward: `ui → state → domain / storage`.
 
 ## Known limitations
 
-- Stopping a repeat is one-way. Due date, tags and repeat are set only at creation; there's no editing yet.
+- Stopping a repeat is one-way. Title, priority, due date and tags are editable; repeat is set only at creation. No sorting by priority.

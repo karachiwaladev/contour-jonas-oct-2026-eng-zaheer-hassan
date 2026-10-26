@@ -2,9 +2,11 @@
 
 A small todo app that stores tasks in the browser's **IndexedDB**: no server and no build step.
 
-- **Add** a task with an optional **due date**, comma-separated **tags** (`work, urgent`) and a **repeat** (None / Daily / Weekly / Monthly).
+- **Add** a task with an optional **due date**, comma-separated **tags** (`work, urgent`) a **priority** (High / Medium / Low, default Medium) and a **repeat** (None / Daily / Weekly / Monthly).
 - **Statuses:** tick a task to complete it, or press ⏸ to put it **on hold** (press again to resume). ✕ deletes it.
-- **Filter** by **All / Active / On hold / Completed**. The choice is remembered across reloads.
+- **Edit** (✎) a task inline: change its title, priority, due date or tags, then Save or Cancel. A blank title isn't saved. Repeat can't be edited.
+- **Filter** by **All / Active / On hold / Completed**, and by **priority** (Any / High / Medium / Low). Both choices are remembered across reloads.
+- **Priority** shows as a coloured badge: High red, Medium amber, Low grey.
 - **Tags** show as chips. Click one to filter by it, combined with the status filter. "✕ clear tag" resets it.
 - **Due dates:** tasks due **today or tomorrow** are amber ("Due soon"), and **past due** tasks are red ("Overdue").
 - **Recurring tasks** show a **⟳ Daily / Weekly / Monthly** label:
