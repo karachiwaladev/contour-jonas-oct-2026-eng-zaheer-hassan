@@ -4,6 +4,7 @@ import { FILTER_KEY, PRIORITY_FILTER_KEY, PRIORITIES } from "./config.js";
 import { allTags } from "./domain/filters.js";
 import { today } from "./domain/dates.js";
 import { prepareNewTask } from "./domain/tasks.js";
+import { applyEdit } from "./domain/edit.js";
 import { completeTask, uncompleteTask, stopRepeating } from "./domain/recurrence.js";
 
 function loadFilter(key) {
@@ -64,6 +65,15 @@ export function createState(repo) {
     },
     stopRepeating: (id) => update(id, (t) => stopRepeating(t)),
     toggleHold: (id) => update(id, (t) => ({ status: t.status === "hold" ? "active" : "hold" })),
+    // A blank title (or unknown id) writes nothing and skips the re-render, so
+    // an open edit form stays open.
+    editTask: async (id, input) => {
+      const task = state.tasks.find((t) => t.id === id);
+      const edited = task && applyEdit(task, input);
+      if (!edited) return;
+      await repo.put(edited);
+      await refresh();
+    },
     removeTask: async (id) => { await repo.remove(id); await refresh(); },
     setStatusFilter: async (status) => { state.view.status = status; saveFilter(FILTER_KEY, status); await refresh(); },
     setPriorityFilter: async (priority) => {

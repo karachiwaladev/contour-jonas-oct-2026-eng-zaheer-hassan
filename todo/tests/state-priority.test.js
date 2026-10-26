@@ -62,3 +62,38 @@ test("setPriorityFilter: still changes the view when storage is blocked", async 
   await state.setPriorityFilter("medium");
   assert.equal(state.get().view.priority, "medium");
 });
+
+async function oneTask() {
+  const repo = memoryRepo();
+  const state = createState(repo);
+  await state.addTask({ title: "Pay rent", due: "", tags: ["home"], repeat: "daily", priority: "low" });
+  const [id] = repo.rows.keys();
+  const seen = [];
+  state.subscribe((s) => seen.push(s.tasks.map((t) => t.title)));
+  return { repo, state, id, seen };
+}
+
+test("editTask: saves the edited fields and re-renders", async () => {
+  const { repo, state, id, seen } = await oneTask();
+  await state.editTask(id, { title: " Rent ", priority: "high", due: "2026-12-01", tags: "Bills" });
+  const saved = repo.rows.get(id);
+  assert.deepEqual([saved.title, saved.priority, saved.due, saved.tags, saved.repeat, saved.status],
+    ["Rent", "high", "2026-12-01", ["bills"], "daily", "active"]);
+  assert.deepEqual(seen, [["Rent"]]);
+});
+
+test("editTask: a blank title saves nothing and does not re-render", async () => {
+  const { repo, state, id, seen } = await oneTask();
+  const before = JSON.stringify([...repo.rows]);
+  await state.editTask(id, { title: "  ", priority: "high", due: "", tags: "" });
+  assert.equal(JSON.stringify([...repo.rows]), before);
+  assert.deepEqual(seen, []);
+});
+
+test("editTask: an unknown task id saves nothing", async () => {
+  const { repo, state, seen } = await oneTask();
+  const before = JSON.stringify([...repo.rows]);
+  await state.editTask(999, { title: "x", priority: "high", due: "", tags: "" });
+  assert.equal(JSON.stringify([...repo.rows]), before);
+  assert.deepEqual(seen, []);
+});
