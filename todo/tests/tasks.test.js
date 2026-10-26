@@ -55,3 +55,8 @@ test("parseTags: ignores empty entries", () => {
   assert.deepEqual(parseTags(" , home,,"), ["home"]);
   assert.deepEqual(parseTags(""), []);
 });
+
+test("prepareNewTask: a missing repeat is stored as none, with no due date", () => {
+  assert.deepEqual(prepareNewTask({ title: "x", due: "", tags: [] }, "2026-10-26"),
+    { title: "x", status: "active", due: "", tags: [], repeat: "none" });
+});

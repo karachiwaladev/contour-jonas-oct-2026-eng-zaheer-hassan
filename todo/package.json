@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Client-side todo app (IndexedDB, no build step)",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:coverage": "node scripts/check-coverage.mjs"
   }
 }
