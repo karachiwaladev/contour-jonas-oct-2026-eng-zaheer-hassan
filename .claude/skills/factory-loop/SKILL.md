@@ -137,6 +137,8 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
    gh api user -q .login
    ```
 
+   **Quick route first:** `node .claude/hooks/queue-status.js [N ...]` prints one line per open issue, `#N title | stage=<latest marker, none or legacy> | replies=<human replies since> | <first reply>`. Use it instead of an inline `py -c` / `node -e` eval. If every line is `replies=0` on a non-`none`, non-`review` stage, the tick has nothing to do. Otherwise fetch the full JSON below only for the issues that need it.
+
 2. **List candidate issues.** Use the `--json` form. `gh issue view --comments` can print nothing in some terminals, while JSON is reliable.
    ```
    gh issue list --state open --limit 100 --json number,title,body,author,comments
