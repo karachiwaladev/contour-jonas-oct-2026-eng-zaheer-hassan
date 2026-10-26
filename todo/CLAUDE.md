@@ -17,7 +17,7 @@ Layers only call downward: `ui → state → domain / storage`.
 | `src/storage/taskRepo.js` | Task create/read/update/delete, normalising on read. Atomic, idempotent `complete` and `uncomplete` |
 | `src/domain/dates.js` | Local-day `YYYY-MM-DD` arithmetic, `dueState` |
 | `src/domain/tasks.js` | `normalize` (legacy shapes), `normalizePriority`, `parseTags`, `prepareNewTask` |
-| `src/domain/edit.js` | `applyEdit`: title/priority/due/tags only; blank title returns `null` |
+| `src/domain/edit.js` | `applyEdit`: title/priority/due/tags only; blank title returns `null`. A repeating task keeps its due if cleared; moving a monthly due re-anchors `repeatDay` |
 | `src/domain/filters.js` | Counts by status and priority, tag catalogue, status/tag/priority filtering |
 | `src/domain/recurrence.js` | `nextDueDate` (monthly anchor day), `completeTask`, `uncompleteTask`, `stopRepeating` |
 | `src/ui/*.js` | One module per component: task item, list, filter bar, priority filter, priority badge, tag row, form, edit form, chip |
