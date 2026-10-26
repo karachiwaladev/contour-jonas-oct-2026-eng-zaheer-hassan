@@ -4,7 +4,7 @@ import { FILTER_KEY } from "./config.js";
 import { allTags } from "./domain/filters.js";
 import { today } from "./domain/dates.js";
 import { prepareNewTask } from "./domain/tasks.js";
-import { completeTask, stopRepeating } from "./domain/recurrence.js";
+import { completeTask, uncompleteTask, stopRepeating } from "./domain/recurrence.js";
 
 function loadFilter() {
   try { return localStorage.getItem(FILTER_KEY) || "all"; } catch { return "all"; }
@@ -16,6 +16,7 @@ function saveFilter(status) {
 
 export function createState(repo) {
   const listeners = [];
+  const pending = new Set(); // task ids with a completion write in flight
   const state = { tasks: [], view: { status: loadFilter(), tag: "" } };
 
   const refresh = async () => {
@@ -36,13 +37,23 @@ export function createState(repo) {
     load: refresh,
     addTask: async (input) => { await repo.add(prepareNewTask(input, today())); await refresh(); },
     setDone: async (id, done) => {
+      // One write per task at a time: a second click while the first is still
+      // saving is ignored (the re-render then shows the saved state).
+      if (pending.has(id)) return;
       const task = state.tasks.find((t) => t.id === id);
-      if (!task) return;
-      if (!done) return update(id, () => ({ status: "active" }));
-      // Completing a repeating task also creates its next occurrence.
-      const { completed, next } = completeTask(task, today());
-      await repo.put(completed);
-      if (next) await repo.add(next);
+      if (!task || (task.status === "done") === done) return;
+      pending.add(id);
+      try {
+        if (done) {
+          const { completed, next } = completeTask(task, today());
+          await repo.complete(completed, next);
+        } else {
+          const { revived, removeId } = uncompleteTask(task, state.tasks);
+          await repo.uncomplete(revived, removeId);
+        }
+      } finally {
+        pending.delete(id);
+      }
       await refresh();
     },
     stopRepeating: (id) => update(id, (t) => stopRepeating(t)),

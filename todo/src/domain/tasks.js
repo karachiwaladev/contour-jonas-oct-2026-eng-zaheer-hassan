@@ -1,4 +1,5 @@
 // Pure task rules: shape normalisation and input parsing.
+import { REPEATS } from "../config.js";
 
 // Tasks saved before statuses / due dates / tags existed only have `done`.
 export function normalize(task) {
@@ -7,7 +8,7 @@ export function normalize(task) {
     status: task.status || (task.done ? "done" : "active"),
     due: task.due || "",
     tags: Array.isArray(task.tags) ? task.tags : [],
-    repeat: task.repeat || "none",
+    repeat: REPEATS.includes(task.repeat) ? task.repeat : "none",
   };
 }
 

@@ -8,10 +8,11 @@ A small todo app that stores tasks in the browser's **IndexedDB**: no server and
 - **Tags** show as chips. Click one to filter by it, combined with the status filter. "✕ clear tag" resets it.
 - **Due dates:** tasks due **today or tomorrow** are amber ("Due soon"), and **past due** tasks are red ("Overdue").
 - **Recurring tasks** show a **⟳ Daily / Weekly / Monthly** label:
-  - **Completing one** keeps it in Completed and adds the next occurrence: the next day, the same weekday next week, or the same day next month (clamped to month-end, so Jan 31 → Feb 28).
+  - **Completing one** keeps it in Completed and adds the next occurrence: the next day, the same weekday next week, or the same day next month. A day that doesn't exist falls back to the month's last day, and the series returns to its original day afterwards (Jan 31 → Feb 28 → Mar 31).
+  - **Unticking by mistake** undoes it: the task becomes active again, and the occurrence it created is removed if you haven't touched it yet.
   - **Completing late** skips straight to the first date after today.
   - **No due date** means the first occurrence is due today.
-  - **⟳ on the task** stops it repeating.
+  - **⟳ on the task** stops it repeating. This is one-way: to repeat it again, add a new task.
 
 ## Run
 
@@ -31,4 +32,4 @@ cd todo && npm test        # = node --test
 
 Domain logic (`src/domain/`) is unit-tested. See `CLAUDE.md` for the module map.
 
-> `app.js` and `styles.css` are the pre-#15 single-file version. They're no longer loaded and can be deleted.
+> `app.js` and `styles.css` are the pre-#15 single-file version, kept for reference. They're no longer loaded.

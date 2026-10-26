@@ -25,6 +25,10 @@ test("normalize: tasks saved before #15 do not repeat", () => {
   assert.equal(normalize({ id: 1, title: "x", status: "active" }).repeat, "none");
 });
 
+test("normalize: an unknown repeat value becomes none", () => {
+  assert.equal(normalize({ id: 1, title: "x", repeat: "constructor" }).repeat, "none");
+});
+
 test("normalize: keeps a saved repeat setting", () => {
   assert.equal(normalize({ id: 1, title: "x", repeat: "weekly" }).repeat, "weekly");
 });
