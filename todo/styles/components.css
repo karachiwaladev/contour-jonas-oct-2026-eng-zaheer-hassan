@@ -53,11 +53,12 @@
 
 .task-repeat-label { color: var(--accent); font-weight: 600; }
 
-.task-repeat, .task-hold, .task-delete {
+.task-edit, .task-repeat, .task-hold, .task-delete {
   border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 4px 8px; border-radius: 6px;
 }
 .task-hold[aria-pressed="true"] { color: var(--hold); background: var(--accent-soft); }
 .task-delete:hover, .task-delete:focus-visible { color: var(--danger); }
+.task-edit:hover, .task-edit:focus-visible { color: var(--accent); }
 .task-repeat { color: var(--accent); }
 .task-repeat:hover, .task-repeat:focus-visible { color: var(--danger); }
 
@@ -69,3 +70,10 @@
 .task-priority[data-priority="high"] { color: var(--danger); background: var(--danger-soft); }
 .task-priority[data-priority="medium"] { color: var(--warn); background: var(--warn-soft); }
 .task-priority[data-priority="low"] { color: var(--muted); background: var(--bg); }
+
+/* Inline edit form (#18) */
+.edit-form { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.edit-form .field-grow { min-width: 12rem; }
+.edit-actions { display: flex; gap: 6px; margin-left: auto; }
+.edit-actions button { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+.edit-actions .edit-save { border-color: var(--accent); background: var(--accent); color: #fff; }

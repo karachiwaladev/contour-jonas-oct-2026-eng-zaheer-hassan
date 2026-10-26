@@ -10,12 +10,13 @@ import { renderFilterBar, bindFilterBar } from "./ui/filterBar.js";
 import { renderPriorityFilter, bindPriorityFilter } from "./ui/priorityFilter.js";
 import { renderTagRow, bindTagClicks } from "./ui/tagRow.js";
 import { bindNewTaskForm } from "./ui/newTaskForm.js";
+import { bindEditing } from "./ui/editForm.js";
 
 function findElements(doc) {
   const $ = (id) => doc.getElementById(id);
   return {
     form: $("new-task"), list: $("task-list"), empty: $("empty"), summary: $("summary"),
-    tagRow: $("tag-filter"), template: $("task-template"),
+    tagRow: $("tag-filter"), template: $("task-template"), editTemplate: $("edit-template"),
     filterButtons: [...doc.querySelectorAll(".filter")],
     priorityButtons: [...doc.querySelectorAll(".priority-filter")],
   };
@@ -40,6 +41,11 @@ async function wire(doc, els) {
   bindTagClicks(doc, { onTag: state.toggleTag, onClear: state.clearTag });
   bindTaskList(els.list, {
     onDone: state.setDone, onHold: state.toggleHold, onStopRepeat: state.stopRepeating, onDelete: state.removeTask,
+  });
+  bindEditing(els.list, els.editTemplate, {
+    getTask: (id) => state.get().tasks.find((t) => t.id === id),
+    onSave: state.editTask,
+    onCancel: state.load, // re-render, which drops the open form
   });
   await state.load();
 }
