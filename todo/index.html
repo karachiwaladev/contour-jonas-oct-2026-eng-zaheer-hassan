@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Todo</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
 </head>
 <body>
   <main class="app">
@@ -20,6 +21,15 @@
         <label class="field">
           <span>Due</span>
           <input id="task-due" name="due" type="date">
+        </label>
+        <label class="field">
+          <span>Repeat</span>
+          <select id="task-repeat" name="repeat">
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
         </label>
         <label class="field field-grow">
           <span>Tags</span>
@@ -49,16 +59,18 @@
         <span class="task-body">
           <span class="task-title"></span>
           <span class="task-meta">
+            <span class="task-repeat-label"></span>
             <span class="task-due"></span>
             <span class="task-tags"></span>
           </span>
         </span>
       </label>
+      <button type="button" class="task-repeat" title="Stop repeating (can't be undone)" aria-label="Stop repeating (can't be undone)">⟳</button>
       <button type="button" class="task-hold" aria-pressed="false" title="Put on hold">⏸</button>
       <button type="button" class="task-delete" aria-label="Delete task">✕</button>
     </li>
   </template>
 
-  <script src="app.js"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

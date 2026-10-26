@@ -1,0 +1,9 @@
+{
+  "name": "todo",
+  "private": true,
+  "type": "module",
+  "description": "Client-side todo app (IndexedDB, no build step)",
+  "scripts": {
+    "test": "node --test"
+  }
+}
