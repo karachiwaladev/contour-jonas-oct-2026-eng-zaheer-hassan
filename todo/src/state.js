@@ -60,7 +60,11 @@ export function createState(repo) {
     toggleHold: (id) => update(id, (t) => ({ status: t.status === "hold" ? "active" : "hold" })),
     removeTask: async (id) => { await repo.remove(id); await refresh(); },
     setStatusFilter: async (status) => { state.view.status = status; saveFilter(status); await refresh(); },
+    // Equivalent mutants: refresh() resets any tag no task has to "", so the
+    // exact "no tag" value written here can't change what the user sees.
+    // Stryker disable next-line StringLiteral: refresh() normalises an unused tag to ""
     toggleTag: async (tag) => { state.view.tag = state.view.tag === tag ? "" : tag; await refresh(); },
+    // Stryker disable next-line StringLiteral: refresh() normalises an unused tag to ""
     clearTag: async () => { state.view.tag = ""; await refresh(); },
   };
 }

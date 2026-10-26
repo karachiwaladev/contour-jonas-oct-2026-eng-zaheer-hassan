@@ -56,7 +56,8 @@ export function completeTask(task, todayIso) {
 // the user already completed or put on hold is never lost.
 export function uncompleteTask(task, tasks) {
   const { nextId, ...rest } = task;
-  const spawned = nextId != null ? tasks.find((t) => t.id === nextId) : null;
+  // Stored tasks always have an id, so a missing nextId simply finds nothing.
+  const spawned = tasks.find((t) => t.id === nextId);
   return { revived: { ...rest, status: "active" }, removeId: spawned && spawned.status === "active" ? spawned.id : null };
 }
 

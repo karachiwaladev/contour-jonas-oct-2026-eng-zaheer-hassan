@@ -9,8 +9,9 @@ Layers only call downward: `ui → state → domain / storage`.
 | Path | Role |
 |------|------|
 | `index.html` | Markup only; `#task-template` is the task row. Loads `src/main.js` as a module |
-| `src/main.js` | Wiring: storage, then state, then UI. No business rules |
-| `src/config.js` | Constants (DB name, filter key, due-soon window, statuses, repeats) |
+| `src/main.js` | Bootstrap loaded by `index.html`: calls `startApp(document)` |
+| `src/startApp.js` | Wiring: storage, then state, then UI, for a given document. No business rules |
+| `src/config.js` | Constants (DB name, store, filter key, due-soon window, repeats) |
 | `src/state.js` | Task list and view (status + tag). The only place that changes them |
 | `src/storage/db.js` | IndexedDB open and transaction helpers (`withStore`, multi-request `inTransaction`) |
 | `src/storage/taskRepo.js` | Task create/read/update/delete, normalising on read. Atomic, idempotent `complete` and `uncomplete` |
@@ -20,7 +21,11 @@ Layers only call downward: `ui → state → domain / storage`.
 | `src/domain/recurrence.js` | `nextDueDate` (monthly anchor day), `completeTask`, `uncompleteTask`, `stopRepeating` |
 | `src/ui/*.js` | One module per component: task item, list, filter bar, tag row, form, chip |
 | `styles/base.css` / `styles/components.css` | Tokens and elements / component styles |
-| `tests/*.test.js` | `node --test` unit tests for `src/domain/`, plus `state.test.js` against an in-memory repo |
+| `tests/*.test.js` | `node --test` unit tests for every `src/` module |
+| `tests/helpers/` | Test fakes: `fake-dom.js` (+ `parse-html.js`, loads the real `index.html`), `fake-idb.js`, `memory-repo.js` |
+| `scripts/check-coverage.mjs` | `npm run test:coverage`: fails unless every `src/` file is 100% covered, with no blanket ignore comments |
+| `stryker.config.mjs` | `npm run test:mutation`: Stryker mutation testing, break threshold 100% |
+| `scripts/eval-policy.mjs` | Anti-cheat rules the gate enforces: only justified one-line Stryker exclusions, a locked Stryker config, and real npm scripts (tested in `tests/eval-policy.test.js`) |
 
 ## Conventions
 
@@ -30,6 +35,8 @@ Layers only call downward: `ui → state → domain / storage`.
   - New fields need a default in `normalize` so old data keeps working. Unknown `repeat` values normalise to `"none"`.
 - **Completion** goes through `state.setDone`, which runs one write per task at a time, and `repo.complete` / `repo.uncomplete`, each a single transaction. Never complete a task with separate `put` + `add` calls.
 - **New rules** go in `src/domain/`, test-first. `ui/` only renders and forwards events.
+- **Coverage and mutation score are 100% and must stay there.** Run `npm run eval` (coverage gate + Stryker) before every PR. A new `src/` file needs tests that load it. Test UI against the fake DOM and storage against the fake IndexedDB, not by excluding files.
+- **A surviving mutant means a missing assertion:** add the test. Only a truly equivalent mutant (one that can't change observable behaviour) gets `// Stryker disable next-line <Mutator>: <reason>`. Persisted names (DB, store, filter key) are tested as literal strings, because renaming them loses users' data.
 - **Size:** files under ~150 lines and functions under ~30. The god-object hook blocks files over 200 lines or 15 functions.
 
 ## Known limitations

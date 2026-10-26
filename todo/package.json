@@ -4,6 +4,16 @@
   "type": "module",
   "description": "Client-side todo app (IndexedDB, no build step)",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:coverage": "node scripts/check-coverage.mjs",
+    "test:mutation": "stryker run",
+    "eval": "npm run test:coverage && npm run test:mutation"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/tap-runner": "10.0.0"
+  },
+  "overrides": {
+    "qs": "6.16.0"
   }
 }

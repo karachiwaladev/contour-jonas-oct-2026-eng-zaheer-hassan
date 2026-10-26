@@ -108,3 +108,12 @@ test("uncompleteTask: a one-off task just becomes active", () => {
 test("stopRepeating: turns a recurring task into a one-off", () => {
   assert.equal(stopRepeating({ id: 3, repeat: "monthly" }).repeat, "none");
 });
+
+test("completeTask: a repeat with no due date anchors on today", () => {
+  const { next } = completeTask({ id: 1, title: "x", status: "active", due: "", tags: [], repeat: "monthly" }, "2026-10-26");
+  assert.equal(next.repeatDay, 26);
+});
+
+test("completeTask: a non-string repeat value (corrupt data) does not repeat", () => {
+  assert.equal(completeTask({ id: 1, title: "x", status: "active", due: "", tags: [], repeat: ["daily"] }, TODAY).next, null);
+});
