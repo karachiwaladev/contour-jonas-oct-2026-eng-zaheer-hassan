@@ -141,4 +141,8 @@ test("startApp: a task can be edited inline; blank titles are refused and Cancel
   assert.deepEqual(titles(), ["Pay the rent", "Other"]);
   assert.equal(li().querySelector(".task-priority").textContent, "High");
   assert.deepEqual($("tag-filter").children.map((c) => c.textContent), ["#bills"]);
+
+  const other = $("task-list").children[1];
+  await act(other.querySelector(".task-edit"), "click");
+  assert.equal(other.querySelector(".edit-form").elements.namedItem("title").value, "Other");
 });

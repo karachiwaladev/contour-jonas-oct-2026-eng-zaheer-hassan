@@ -46,11 +46,11 @@ test("Save hands the form values to onSave and keeps the page from submitting", 
   await openForm();
   field("title").value = "Pay the rent";
   field("priority").value = "low";
-  field("due").value = "";
+  field("due").value = "2026-12-24";
   field("tags").value = "Bills";
   const event = await dispatch(row().querySelector(".edit-form"), "submit");
   assert.equal(event.defaultPrevented, true);
-  assert.deepEqual(calls.slice(1), [["save", 7, { title: "Pay the rent", priority: "low", due: "", tags: "Bills" }]]);
+  assert.deepEqual(calls.slice(1), [["save", 7, { title: "Pay the rent", priority: "low", due: "2026-12-24", tags: "Bills" }]]);
 });
 
 test("after a rejected save the form is still there with the title focused", async () => {
