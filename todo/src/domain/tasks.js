@@ -1,5 +1,10 @@
 // Pure task rules: shape normalisation and input parsing.
-import { REPEATS } from "../config.js";
+import { REPEATS, PRIORITIES, DEFAULT_PRIORITY } from "../config.js";
+
+// Allow-list, so stored junk like "constructor" never becomes a priority.
+export function normalizePriority(priority) {
+  return PRIORITIES.includes(priority) ? priority : DEFAULT_PRIORITY;
+}
 
 // Tasks saved before statuses / due dates / tags existed only have `done`.
 export function normalize(task) {
@@ -9,6 +14,7 @@ export function normalize(task) {
     due: task.due || "",
     tags: Array.isArray(task.tags) ? task.tags : [],
     repeat: REPEATS.includes(task.repeat) ? task.repeat : "none",
+    priority: normalizePriority(task.priority),
   };
 }
 
@@ -19,7 +25,10 @@ export function parseTags(text) {
 
 // Builds the stored shape of a task from form input. A repeating task needs a
 // date to repeat from, so one without a due date starts today.
-export function prepareNewTask({ title, due, tags, repeat }, todayIso) {
+export function prepareNewTask({ title, due, tags, repeat, priority }, todayIso) {
   const repeats = repeat && repeat !== "none";
-  return { title, status: "active", due: due || (repeats ? todayIso : ""), tags, repeat: repeat || "none" };
+  return {
+    title, status: "active", due: due || (repeats ? todayIso : ""), tags, repeat: repeat || "none",
+    priority: normalizePriority(priority),
+  };
 }

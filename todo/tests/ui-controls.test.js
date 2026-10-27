@@ -66,12 +66,13 @@ test("bindNewTaskForm: submits the trimmed title, due date, parsed tags and repe
   const form = doc.getElementById("new-task");
   const submitted = [];
   bindNewTaskForm(form, async (input) => submitted.push(input));
-  fillForm(form, { title: "  Pay rent ", due: "2026-11-01", tags: "Home, bills, home", repeat: "monthly" });
+  fillForm(form, { title: "  Pay rent ", due: "2026-11-01", tags: "Home, bills, home", repeat: "monthly", priority: "high" });
   const event = await dispatch(form, "submit");
   assert.equal(event.defaultPrevented, true);
-  assert.deepEqual(submitted, [{ title: "Pay rent", due: "2026-11-01", tags: ["home", "bills"], repeat: "monthly" }]);
+  assert.deepEqual(submitted, [{ title: "Pay rent", due: "2026-11-01", tags: ["home", "bills"], repeat: "monthly", priority: "high" }]);
   assert.equal(form.elements.namedItem("title").value, "");
   assert.equal(form.elements.namedItem("repeat").value, "none");
+  assert.equal(form.elements.namedItem("priority").value, "medium");
   assert.equal(doc.activeElement, form.elements.namedItem("title"));
 });
 

@@ -46,6 +46,7 @@ export function completeTask(task, todayIso) {
     due: nextDueDate(task.due, task.repeat, todayIso, repeatDay),
     tags: task.tags,
     repeat: task.repeat,
+    priority: task.priority,
   };
   if (task.repeat === "monthly") next.repeatDay = repeatDay;
   return { completed, next };

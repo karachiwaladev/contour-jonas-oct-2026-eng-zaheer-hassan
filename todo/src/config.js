@@ -8,3 +8,8 @@ export const FILTER_KEY = "todo-app:filter";
 export const DUE_SOON_DAYS = 1;
 
 export const REPEATS = ["none", "daily", "weekly", "monthly"];
+
+// Task priority (#18). Unknown or missing values normalise to the default.
+export const PRIORITIES = ["high", "medium", "low"];
+export const DEFAULT_PRIORITY = "medium";
+export const PRIORITY_FILTER_KEY = "todo-app:priority-filter";

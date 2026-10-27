@@ -58,7 +58,7 @@ test("parseTags: ignores empty entries", () => {
 
 test("prepareNewTask: a missing repeat is stored as none, with no due date", () => {
   assert.deepEqual(prepareNewTask({ title: "x", due: "", tags: [] }, "2026-10-26"),
-    { title: "x", status: "active", due: "", tags: [], repeat: "none" });
+    { title: "x", status: "active", due: "", tags: [], repeat: "none", priority: "medium" });
 });
 
 test("normalize: keeps every supported repeat setting", () => {
@@ -67,4 +67,24 @@ test("normalize: keeps every supported repeat setting", () => {
 
 test("normalize: an empty repeat value becomes none", () => {
   assert.equal(normalize({ id: 1, title: "x", repeat: "" }).repeat, "none");
+});
+
+test("normalize: tasks saved before #18 have medium priority", () => {
+  assert.equal(normalize({ id: 1, title: "x" }).priority, "medium");
+});
+
+test("normalize: an unknown or empty priority becomes medium", () => {
+  for (const priority of ["", "constructor", "urgent"]) assert.equal(normalize({ id: 1, title: "x", priority }).priority, "medium");
+});
+
+test("normalize: keeps every supported priority", () => {
+  for (const priority of ["high", "medium", "low"]) assert.equal(normalize({ id: 1, title: "x", priority }).priority, priority);
+});
+
+test("prepareNewTask: keeps a chosen priority", () => {
+  assert.equal(prepareNewTask({ title: "x", due: "", tags: [], priority: "high" }, "2026-10-26").priority, "high");
+});
+
+test("prepareNewTask: an unknown priority is stored as medium", () => {
+  assert.equal(prepareNewTask({ title: "x", due: "", tags: [], priority: "toString" }, "2026-10-26").priority, "medium");
 });
