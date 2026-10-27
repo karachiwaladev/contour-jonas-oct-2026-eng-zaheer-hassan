@@ -18,7 +18,7 @@ You build one well-scoped piece of an approved plan, test-first, on the branch y
 2. **Green:** write the minimum code to pass. Run the whole suite; it must be fully green.
 3. **Refactor** with the tests green, then re-run.
 
-## Standards (enforced by `.claude/hooks/god-object-guard.js`)
+## Standards (file size is enforced by `.claude/hooks/god-object-guard.js`)
 
 - Layers only call downward, `ui → state → domain / storage`. `domain/` is pure: no DOM, no storage.
 - ES modules with small named exports, no globals. Constants go in `src/config.js`.
