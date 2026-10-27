@@ -3,11 +3,11 @@
   "notes": "Each run targets its own freshly seeded issue (see workspace scripts/seed_test_issues.sh); {N} is replaced with that issue number. Graded against live GitHub state by scripts/grade.py.",
   "evals": [
     {"id": 0, "name": "capital-question", "prompt": "Handle GitHub ticket #{N} in this repo — it's a question from the team.",
-     "expected_output": "👀 before comment; one answer comment (Canberra); closed as completed.", "files": [],
-     "assertions": ["👀 reaction by own account exists", "👀 added before first comment", "Exactly one comment by own account", "Issue closed as completed", "Answer mentions 'canberra'"]},
+     "expected_output": "👀 before comment; one answer comment (Canberra) ending with the answer marker; issue left OPEN awaiting the reporter's acceptance.", "files": [],
+     "assertions": ["👀 reaction by own account exists", "👀 added before first comment", "Exactly one comment by own account", "Comment contains '<!-- factory-loop:answer -->'", "Issue left open", "Answer mentions 'canberra'"]},
     {"id": 1, "name": "highest-peak", "prompt": "Handle GitHub ticket #{N} in this repo — it's a question from the team.",
-     "expected_output": "👀 before comment; answer K2 ~8,611 m; closed as completed.", "files": [],
-     "assertions": ["👀 reaction by own account exists", "👀 added before first comment", "Exactly one comment by own account", "Issue closed as completed", "Answer mentions 'k2'"]},
+     "expected_output": "👀 before comment; answer K2 ~8,611 m ending with the answer marker; issue left OPEN awaiting the reporter's acceptance.", "files": [],
+     "assertions": ["👀 reaction by own account exists", "👀 added before first comment", "Exactly one comment by own account", "Comment contains '<!-- factory-loop:answer -->'", "Issue left open", "Answer mentions 'k2'"]},
     {"id": 2, "name": "vague-bug-report", "prompt": "Handle GitHub ticket #{N} in this repo — it's a question from the team.",
      "expected_output": "👀; clarifying comment; issue left OPEN.", "files": [],
      "assertions": ["👀 reaction by own account exists", "👀 added before first comment", "Exactly one comment by own account", "Unresolvable issue left open"]}

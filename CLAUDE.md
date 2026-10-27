@@ -26,14 +26,13 @@ Rules that follow from this:
 
 ## Project layout
 
-Each project gets its own top-level folder under `projects/`:
+Each project gets its own top-level folder at the repo root (e.g. `todo/`):
 
 ```
-projects/
-  <project-name>/
-    CLAUDE.md      # layer 2: project context, under 100 lines
-    docs/          # layer 3: optional, on-demand detail
-    ...source...
+<project-name>/
+  CLAUDE.md      # layer 2: project context, under 100 lines
+  docs/          # layer 3: optional, on-demand detail
+  ...source...
 ```
 
 - Folder names are `kebab-case`.
@@ -48,7 +47,7 @@ Keep this table in sync whenever a project or factory tool is added, renamed or 
 
 | Name | Path | What it is |
 |------|------|------------|
-| factory-loop | `.claude/skills/factory-loop/` | Works the issue queue: 👀, answer/clarify, close |
+| factory-loop | `.claude/skills/factory-loop/` | Works the issue queue: 👀, answer/clarify/hold, PRs sent for review; closes only after a person approves |
 | guard hooks | `.claude/hooks/` | Block irreversible/secret-touching commands, scan read text for prompt injection, quality gate. Tests: `node --test .claude/hooks/tests/guards.test.js` |
 
 ### Projects
@@ -60,5 +59,6 @@ Keep this table in sync whenever a project or factory tool is added, renamed or 
 ## Ground rules
 
 - Training repo only: no Jonas or Contour code, and no real keys or secrets.
-- Reference the ticket in every commit/PR (`Closes #N` / `Refs #N`).
+- Reference the ticket in every commit/PR (`Closes #N` / `Refs #N`); a direct request opens an issue first, since the Stop hook's auto-commit is a safety net, not a delivery path.
+- When a request to change the factory is ambiguous (e.g. "eval"), restate it in one line and confirm before editing.
 - Check facts before posting answers, and cite only sources you actually opened.
