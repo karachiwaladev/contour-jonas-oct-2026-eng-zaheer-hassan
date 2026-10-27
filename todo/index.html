@@ -46,6 +46,12 @@
       </div>
     </form>
 
+    <div class="search" role="search">
+      <label for="search" class="visually-hidden">Search tasks by title or tag</label>
+      <input id="search" type="search" placeholder="Search title or tag" maxlength="200" autocomplete="off">
+      <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" title="Clear search" hidden>×</button>
+    </div>
+
     <nav class="filters" aria-label="Filter by status">
       <button type="button" class="filter" data-status="all">All <span class="count"></span></button>
       <button type="button" class="filter" data-status="active">Active <span class="count"></span></button>

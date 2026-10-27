@@ -15,7 +15,7 @@ beforeEach(() => {
   doc = globalThis.document = createDocument(HTML);
   list = doc.getElementById("task-list");
   const template = doc.getElementById("task-template");
-  renderTaskList({ list, empty: doc.getElementById("empty"), template }, [TASK], 1, { activeTag: "", today: "2026-10-26" });
+  renderTaskList({ list, empty: doc.getElementById("empty"), template }, [TASK], 1, { activeTag: "", today: "2026-10-26", query: "" });
   calls = [];
   bindEditing(list, doc.getElementById("edit-template"), {
     getTask: (id) => { calls.push(["get", id]); return TASK; },

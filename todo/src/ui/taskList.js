@@ -3,10 +3,18 @@ import { renderTaskItem } from "./taskItem.js";
 
 const taskId = (el) => Number(el.closest(".task").dataset.id);
 
+// The query goes in via textContent only, never as HTML.
+function emptyMessage(total, query) {
+  if (!total) return "No tasks yet. Add one above.";
+  const q = query.trim();
+  return q ? `No tasks match "${q}".` : "No tasks match this filter.";
+}
+
+// opts = { activeTag, today, query }
 export function renderTaskList({ list, empty, template }, shown, total, opts) {
   list.replaceChildren(...shown.map((task) => renderTaskItem(template, task, opts)));
   empty.hidden = shown.length > 0;
-  empty.textContent = total ? "No tasks match this filter." : "No tasks yet. Add one above.";
+  empty.textContent = emptyMessage(total, opts.query);
 }
 
 // handlers = { onDone(id, checked), onHold(id), onStopRepeat(id), onDelete(id) }
