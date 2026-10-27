@@ -103,6 +103,7 @@ A single long pass fills the context with screenshots, DOM dumps, diffs and web 
 | 5a: answer a question (and follow-ups) | `ticket-researcher` | A draft comment with confidence, citing only sources it opened. You review it and post it. |
 | 5d.3: build independent plan pieces | `tdd-builder` (one per piece; run them in parallel only if they touch different files) | Commits on the ticket branch, with test results. You push. |
 | 5c.3 / 5d.4: browser verification | `browser-verifier` | PASS/FAIL per path, console status, screenshot paths |
+| 5d.4: persona swarm (UI tickets) | `persona-tester` ×5, via the `persona-swarm` skill | Per-persona verdict and findings (severity, confirmed/suspect, repro, screenshot); you merge and rank them |
 | 5c.3 / 5d.5: code review | `code-reviewer` | Critical / Important / Minor findings, plus a real test run |
 | 5c.3 / 5d.5: security check | `security-reviewer` | security-audit (guidance, diff) findings, needs_validation items, deepsec status |
 
@@ -276,6 +277,8 @@ Use `gh` for everything. The commands below work in both Bash and PowerShell.
       - `take_screenshot` with `filePath` at each meaningful state, saved into the project as `<project>/docs/screenshots/ticket-<N>-<step>.png` (e.g. `-1-empty`, `-2-added`, `-3-done`)
 
       Stop the local server afterwards. If any check fails, fix it and re-run all the checks. Never ship an unverified build.
+
+      **Then run the persona swarm** (`.claude/skills/persona-swarm/SKILL.md`) on any ticket that changes what a user sees. Five `persona-tester` agents test the app in character: tech-savvy, power user, older user, hacker, and keyboard/screen-reader. Spot-check each confirmed Critical/High finding, then fix it test-first before the PR. List the rest in a **Persona swarm** section of the PR body.
 
    5. **Code review and security scan, then ship it for review.** Run `superpowers:requesting-code-review` on the branch diff, and fix the Critical and Important findings. Then run the security checks, `security-audit` (guidance mode, focused on the diff) and `deepsec` (bounded first pass), and fix any Critical or High finding in the changed code, test-first. Re-run the tests and browser checks, retaking screenshots after any code change. Then ship as in 5c.4–6, committing the screenshots with the code. Add a **Code review** section to the PR body with what the review found and what you fixed, and a **Security** section with both results (`security-audit` and `deepsec`): findings fixed, findings and `needs_validation` items left for a person to decide, or "not run, because <reason>". The PR body lists what was built, the checks run and their results, and embeds the screenshots from the branch, so the reviewer can see the result without running it:
       `![step](https://github.com/<owner>/<repo>/blob/<branch>/<path>?raw=true)`. Then request the review and post the stage `review` comment. Don't merge yet.
