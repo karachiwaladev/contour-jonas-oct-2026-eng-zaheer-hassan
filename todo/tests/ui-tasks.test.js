@@ -95,23 +95,35 @@ const listEls = () => ({ list: doc.getElementById("task-list"), empty: doc.getEl
 
 test("renderTaskList: shows the tasks and hides the empty message", () => {
   const els = listEls();
-  renderTaskList(els, [task({ id: 1 }), task({ id: 2 })], 2, { activeTag: "", today: TODAY });
+  renderTaskList(els, [task({ id: 1 }), task({ id: 2 })], 2, { activeTag: "", today: TODAY, query: "" });
   assert.equal(els.list.children.length, 2);
   assert.equal(els.empty.hidden, true);
 });
 
 test("renderTaskList: explains an empty list, or a filter with no matches", () => {
   const els = listEls();
-  renderTaskList(els, [], 0, { activeTag: "", today: TODAY });
+  renderTaskList(els, [], 0, { activeTag: "", today: TODAY, query: "" });
   assert.equal(els.empty.hidden, false);
   assert.equal(els.empty.textContent, "No tasks yet. Add one above.");
-  renderTaskList(els, [], 3, { activeTag: "", today: TODAY });
+  renderTaskList(els, [], 3, { activeTag: "", today: TODAY, query: "" });
   assert.equal(els.empty.textContent, "No tasks match this filter.");
+});
+
+test("renderTaskList: a search with no matches names the trimmed query, as text", () => {
+  const els = listEls();
+  renderTaskList(els, [], 3, { activeTag: "", today: TODAY, query: "  <b>rent</b> " });
+  assert.equal(els.empty.hidden, false);
+  assert.equal(els.empty.textContent, 'No tasks match "<b>rent</b>".');
+  assert.equal(els.empty.children.length, 0);
+  renderTaskList(els, [], 3, { activeTag: "", today: TODAY, query: "   " });
+  assert.equal(els.empty.textContent, "No tasks match this filter.");
+  renderTaskList(els, [], 0, { activeTag: "", today: TODAY, query: "rent" });
+  assert.equal(els.empty.textContent, "No tasks yet. Add one above.");
 });
 
 test("bindTaskList: forwards each control to its handler with the task id", async () => {
   const els = listEls();
-  renderTaskList(els, [task({ id: 7, repeat: "daily" })], 1, { activeTag: "", today: TODAY });
+  renderTaskList(els, [task({ id: 7, repeat: "daily" })], 1, { activeTag: "", today: TODAY, query: "" });
   const calls = [];
   const log = (name) => (...args) => calls.push([name, ...args]);
   bindTaskList(els.list, { onDone: log("done"), onHold: log("hold"), onStopRepeat: log("stop"), onDelete: log("delete") });

@@ -1,5 +1,6 @@
-// Pure list views: counts, tag catalogue and status/tag/priority filtering.
+// Pure list views: counts, tag catalogue and status/tag/priority/search filtering.
 import { PRIORITIES } from "../config.js";
+import { matchesQuery } from "./search.js";
 
 export function countByStatus(tasks) {
   const counts = { all: tasks.length, active: 0, hold: 0, done: 0 };
@@ -18,9 +19,9 @@ export function allTags(tasks) {
   return [...new Set(tasks.flatMap((t) => t.tags))].sort();
 }
 
-// view = { status: "all" | <status>, tag: "" | <tag>, priority: "all" | <priority> }
+// view = { status: "all" | <status>, tag: "" | <tag>, priority: "all" | <priority>, query: <search text> }
 export function filterTasks(tasks, view) {
   return tasks.filter((t) =>
     (view.status === "all" || t.status === view.status) && (!view.tag || t.tags.includes(view.tag))
-    && (view.priority === "all" || t.priority === view.priority));
+    && (view.priority === "all" || t.priority === view.priority) && matchesQuery(t, view.query));
 }

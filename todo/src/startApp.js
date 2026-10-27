@@ -12,12 +12,14 @@ import { renderPriorityFilter, bindPriorityFilter } from "./ui/priorityFilter.js
 import { renderTagRow, bindTagClicks } from "./ui/tagRow.js";
 import { bindNewTaskForm } from "./ui/newTaskForm.js";
 import { bindEditing } from "./ui/editForm.js";
+import { bindSearchBox, renderSearchBox } from "./ui/searchBox.js";
 import { renderFooter } from "./ui/footer.js";
 
 function findElements(doc) {
   const $ = (id) => doc.getElementById(id);
   return {
     form: $("new-task"), list: $("task-list"), empty: $("empty"), summary: $("summary"),
+    search: $("search"), searchClear: $("search-clear"),
     tagRow: $("tag-filter"), template: $("task-template"), editTemplate: $("edit-template"),
     filterButtons: [...doc.querySelectorAll(".filter")],
     priorityButtons: [...doc.querySelectorAll(".priority-filter")],
@@ -28,6 +30,10 @@ function render(els, { tasks, view }) {
   renderFilterBar(els.filterButtons, countByStatus(tasks), view.status);
   renderPriorityFilter(els.priorityButtons, countByPriority(tasks), view.priority);
   renderTagRow(els.tagRow, allTags(tasks), view.tag);
+  renderSearchBox(els.search, els.searchClear, view.query);
+  renderTaskList(els, filterTasks(tasks, view), tasks.length, { activeTag: view.tag, today: today(), query: view.query });
+  els.summary.textContent = tasks.length
+    ? `${counts.active} active · ${counts.hold} on hold · ${counts.done} completed` : "";
   renderTaskList(els, filterTasks(tasks, view), tasks.length, { activeTag: view.tag, today: today() });
   renderFooter(els.summary, footerText(tasks));
 }
@@ -38,6 +44,7 @@ async function wire(doc, els) {
   bindNewTaskForm(els.form, state.addTask);
   bindFilterBar(els.filterButtons, state.setStatusFilter);
   bindPriorityFilter(els.priorityButtons, state.setPriorityFilter);
+  bindSearchBox(els.search, els.searchClear, state.setQuery);
   bindTagClicks(doc, { onTag: state.toggleTag, onClear: state.clearTag });
   bindTaskList(els.list, {
     onDone: state.setDone, onHold: state.toggleHold, onStopRepeat: state.stopRepeating, onDelete: state.removeTask,

@@ -24,7 +24,9 @@ function loadPriorityFilter() {
 export function createState(repo) {
   const listeners = [];
   const pending = new Set(); // task ids with a completion write in flight
-  const state = { tasks: [], view: { status: loadFilter(FILTER_KEY), tag: "", priority: loadPriorityFilter() } };
+  const state = { tasks: [], view: {
+    status: loadFilter(FILTER_KEY), tag: "", priority: loadPriorityFilter(), query: "", // query (#21) is never saved
+  } };
 
   const refresh = async () => {
     state.tasks = await repo.all();
@@ -81,6 +83,7 @@ export function createState(repo) {
       saveFilter(PRIORITY_FILTER_KEY, priority);
       await refresh();
     },
+    setQuery: async (text) => { state.view.query = text; await refresh(); },
     // Equivalent mutants: refresh() resets any tag no task has to "", so the
     // exact "no tag" value written here can't change what the user sees.
     // Stryker disable next-line StringLiteral: refresh() normalises an unused tag to ""

@@ -21,19 +21,19 @@ test("allTags returns each tag once, sorted", () => {
 });
 
 test("filterTasks: status 'all' with no tag returns everything", () => {
-  assert.equal(filterTasks(tasks, { status: "all", tag: "", priority: "all" }).length, 5);
+  assert.equal(filterTasks(tasks, { status: "all", tag: "", priority: "all", query: "" }).length, 5);
 });
 
 test("filterTasks: by status", () => {
-  assert.deepEqual(titles(filterTasks(tasks, { status: "hold", tag: "", priority: "all" })), ["Offsite"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "hold", tag: "", priority: "all", query: "" })), ["Offsite"]);
 });
 
 test("filterTasks: by tag", () => {
-  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "urgent", priority: "all" })), ["Expense report", "Leaking tap"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "urgent", priority: "all", query: "" })), ["Expense report", "Leaking tap"]);
 });
 
 test("filterTasks: status and tag combine (on-hold #work is excluded from Active)", () => {
-  assert.deepEqual(titles(filterTasks(tasks, { status: "active", tag: "work", priority: "all" })), ["Expense report"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "active", tag: "work", priority: "all", query: "" })), ["Expense report"]);
 });
 
 test("countByPriority counts each priority and the total", () => {
@@ -45,9 +45,23 @@ test("countByPriority ignores a value that is not a priority", () => {
 });
 
 test("filterTasks: by priority", () => {
-  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "", priority: "high" })), ["Expense report", "Offsite"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "", priority: "high", query: "" })), ["Expense report", "Offsite"]);
 });
 
 test("filterTasks: priority combines with status and tag", () => {
-  assert.deepEqual(titles(filterTasks(tasks, { status: "active", tag: "urgent", priority: "medium" })), ["Leaking tap"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "active", tag: "urgent", priority: "medium", query: "" })), ["Leaking tap"]);
+});
+
+test("filterTasks: the search query narrows the list by title or tag", () => {
+  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "", priority: "all", query: "urgent" })), ["Expense report", "Leaking tap"]);
+  assert.deepEqual(titles(filterTasks(tasks, { status: "all", tag: "", priority: "all", query: "TAP" })), ["Leaking tap"]);
+});
+
+test("filterTasks: the query is ANDed with status, tag and priority", () => {
+  const view = { status: "active", tag: "urgent", priority: "high", query: "report" };
+  assert.deepEqual(titles(filterTasks(tasks, view)), ["Expense report"]);
+  assert.deepEqual(titles(filterTasks(tasks, { ...view, query: "tap" })), []);
+  assert.deepEqual(titles(filterTasks(tasks, { ...view, status: "hold" })), []);
+  assert.deepEqual(titles(filterTasks(tasks, { ...view, tag: "work", query: "offsite" })), []);
+  assert.deepEqual(titles(filterTasks(tasks, { ...view, priority: "medium" })), []);
 });

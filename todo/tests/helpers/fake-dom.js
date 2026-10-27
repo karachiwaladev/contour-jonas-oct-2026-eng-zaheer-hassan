@@ -113,9 +113,9 @@ export function createDocument(html = "") {
 }
 
 // Fires an event at target and bubbles it to the document. Resolves once every
-// (possibly async) listener has finished.
-export function dispatch(target, type) {
-  const event = { type, target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+// (possibly async) listener has finished. props adds event fields, e.g. { key: "Escape" }.
+export function dispatch(target, type, props = {}) {
+  const event = { type, target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...props };
   const results = [];
   for (let el = target; el; el = el.parent) results.push(...(el.listeners[type] || []).map((fn) => fn(event)));
   return Promise.all(results).then(() => event);
