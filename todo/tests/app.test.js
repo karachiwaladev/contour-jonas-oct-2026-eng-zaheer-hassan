@@ -67,8 +67,15 @@ test("startApp: list, filter and tag controls are wired to state", async () => {
 
   await act($("tag-filter").querySelector(".chip"), "click");
   assert.deepEqual(titles(), ["A"]);
+  assert.equal($("summary").textContent, "1 open · 1 done", "the footer ignores the tag filter");
   await act($("tag-filter").querySelector(".chip-clear"), "click");
   assert.deepEqual(titles(), ["A", "B"]);
+
+  const priority = (p) => doc.querySelectorAll(".priority-filter").find((b) => b.dataset.priority === p);
+  await act(priority("high"), "click");
+  assert.deepEqual(titles(), []);
+  assert.equal($("summary").textContent, "1 open · 1 done", "the footer ignores the priority filter");
+  await act(priority("all"), "click");
 
   await act(row("A").querySelector(".task-delete"), "click");
   assert.deepEqual(titles(), ["B"]);
