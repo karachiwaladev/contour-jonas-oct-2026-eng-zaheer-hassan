@@ -6,5 +6,5 @@
 // rendering for the whole list.
 export function matchesQuery(task, query) {
   const fields = [task.title ?? "", ...task.tags].map((s) => s.toLowerCase());
-  return query.toLowerCase().split(/\s+/).every((word) => fields.some((f) => f.includes(word)));
+  return query.toLowerCase().split(/\s/).every((word) => fields.some((f) => f.includes(word)));
 }
