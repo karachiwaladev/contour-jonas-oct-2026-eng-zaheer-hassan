@@ -19,7 +19,7 @@ Layers only call downward: `ui → state → domain / storage`.
 | `src/domain/tasks.js` | `normalize` (legacy shapes), `normalizePriority`, `parseTags`, `prepareNewTask` |
 | `src/domain/edit.js` | `applyEdit`: title/priority/due/tags only; blank title returns `null`. A repeating task keeps its due if cleared; moving a monthly due re-anchors `repeatDay` |
 | `src/domain/filters.js` | Counts by status and priority, tag catalogue, status/tag/priority/search filtering (all ANDed) |
-| `src/domain/search.js` | `matchesQuery`: every space-separated word must appear, case-insensitively, in the title or a tag; blank matches all |
+| `src/domain/search.js` | `matchesQuery`: every whitespace-separated word must appear, case-insensitively, in the title or a tag; blank matches all |
 | `src/domain/recurrence.js` | `nextDueDate` (monthly anchor day), `completeTask`, `uncompleteTask`, `stopRepeating` |
 | `src/ui/*.js` | One module per component: task item, list, filter bar, priority filter, priority badge, tag row, form, edit form, chip, search box (`searchBox.js`: × and Esc clear) |
 | `styles/base.css` / `styles/components.css` | Tokens and elements / component styles |

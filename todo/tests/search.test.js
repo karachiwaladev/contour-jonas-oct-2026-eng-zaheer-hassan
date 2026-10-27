@@ -40,3 +40,15 @@ test("matchesQuery: no match is false, even when each letter appears", () => {
   assert.equal(matchesQuery(task("Passport"), "tap"), false);
   assert.equal(matchesQuery(rent, "groceries"), false);
 });
+
+test("matchesQuery: a stored task with no title never throws, and never matches 'undefined'", () => {
+  const untitled = { tags: ["home"] };
+  assert.equal(matchesQuery(untitled, ""), true);
+  assert.equal(matchesQuery(untitled, "home"), true);
+  assert.equal(matchesQuery(untitled, "undefined"), false);
+});
+
+test("matchesQuery: words split on any whitespace (tab, non-breaking space)", () => {
+  assert.equal(matchesQuery(rent, "pay\trent"), true);
+  assert.equal(matchesQuery(rent, "pay\u00a0rent"), true);
+});
