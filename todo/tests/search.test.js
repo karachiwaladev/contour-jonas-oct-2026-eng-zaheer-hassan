@@ -57,3 +57,12 @@ test("matchesQuery: an untitled, untagged task matches only a blank query", () =
   assert.equal(matchesQuery({ tags: [] }, "e"), false);
   assert.equal(matchesQuery({ tags: [] }, " "), true);
 });
+
+test("matchesQuery: non-string titles and tags in stored data never throw", () => {
+  const junk = { title: 42, tags: [7, null, { a: 1 }] };
+  assert.equal(matchesQuery(junk, ""), true);
+  assert.equal(matchesQuery(junk, "42"), true);
+  assert.equal(matchesQuery(junk, "7"), true);
+  assert.equal(matchesQuery({ title: null, tags: [] }, "null"), false);
+  assert.equal(matchesQuery({ title: "Pay rent", tags: [null] }, "null"), false);
+});
