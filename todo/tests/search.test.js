@@ -52,3 +52,8 @@ test("matchesQuery: words split on any whitespace (tab, non-breaking space)", ()
   assert.equal(matchesQuery(rent, "pay\trent"), true);
   assert.equal(matchesQuery(rent, "pay\u00a0rent"), true);
 });
+
+test("matchesQuery: an untitled, untagged task matches only a blank query", () => {
+  assert.equal(matchesQuery({ tags: [] }, "e"), false);
+  assert.equal(matchesQuery({ tags: [] }, " "), true);
+});
