@@ -4,6 +4,7 @@ import { openDb } from "./storage/db.js";
 import { createTaskRepo } from "./storage/taskRepo.js";
 import { createState } from "./state.js";
 import { today } from "./domain/dates.js";
+import { footerText } from "./domain/summary.js";
 import { countByStatus, countByPriority, allTags, filterTasks } from "./domain/filters.js";
 import { renderTaskList, bindTaskList } from "./ui/taskList.js";
 import { renderFilterBar, bindFilterBar } from "./ui/filterBar.js";
@@ -12,6 +13,7 @@ import { renderTagRow, bindTagClicks } from "./ui/tagRow.js";
 import { bindNewTaskForm } from "./ui/newTaskForm.js";
 import { bindEditing } from "./ui/editForm.js";
 import { bindSearchBox, renderSearchBox } from "./ui/searchBox.js";
+import { renderFooter } from "./ui/footer.js";
 
 function findElements(doc) {
   const $ = (id) => doc.getElementById(id);
@@ -25,14 +27,15 @@ function findElements(doc) {
 }
 
 function render(els, { tasks, view }) {
-  const counts = countByStatus(tasks);
-  renderFilterBar(els.filterButtons, counts, view.status);
+  renderFilterBar(els.filterButtons, countByStatus(tasks), view.status);
   renderPriorityFilter(els.priorityButtons, countByPriority(tasks), view.priority);
   renderTagRow(els.tagRow, allTags(tasks), view.tag);
   renderSearchBox(els.search, els.searchClear, view.query);
   renderTaskList(els, filterTasks(tasks, view), tasks.length, { activeTag: view.tag, today: today(), query: view.query });
   els.summary.textContent = tasks.length
     ? `${counts.active} active · ${counts.hold} on hold · ${counts.done} completed` : "";
+  renderTaskList(els, filterTasks(tasks, view), tasks.length, { activeTag: view.tag, today: today() });
+  renderFooter(els.summary, footerText(tasks));
 }
 
 async function wire(doc, els) {
@@ -58,6 +61,6 @@ async function wire(doc, els) {
 export function startApp(doc) {
   const els = findElements(doc);
   return wire(doc, els).catch((err) => {
-    els.summary.textContent = `Could not open the local database: ${err.message}`;
+    renderFooter(els.summary, `Could not open the local database: ${err.message}`);
   });
 }

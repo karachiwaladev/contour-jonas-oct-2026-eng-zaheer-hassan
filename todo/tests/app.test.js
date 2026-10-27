@@ -33,13 +33,15 @@ test("startApp: an empty database shows the empty state", async () => {
   assert.equal($("empty").hidden, false);
   assert.equal($("empty").textContent, "No tasks yet. Add one above.");
   assert.equal($("summary").textContent, "");
+  assert.equal($("summary").hidden, true);
 });
 
-test("startApp: adding a task renders it, its tag and the summary", async () => {
+test("startApp: adding a task renders it, its tag and the footer", async () => {
   await startApp(doc);
   await addTask({ title: "Pay rent", tags: "home" });
   assert.deepEqual(titles(), ["Pay rent"]);
-  assert.equal($("summary").textContent, "1 active · 0 on hold · 0 completed");
+  assert.equal($("summary").textContent, "1 open · 0 done");
+  assert.equal($("summary").hidden, false);
   assert.equal($("tag-filter").hidden, false);
   assert.equal(doc.querySelector(".filter").querySelector(".count").textContent, "1");
 });
@@ -51,21 +53,29 @@ test("startApp: list, filter and tag controls are wired to state", async () => {
   const row = (title) => $("task-list").children.find((li) => li.querySelector(".task-title").textContent === title);
 
   await act(row("B").querySelector(".task-hold"), "click");
-  assert.equal($("summary").textContent, "1 active · 1 on hold · 0 completed");
+  assert.equal($("summary").textContent, "2 open · 0 done");
 
   const done = row("A").querySelector(".task-done");
   done.checked = true;
   await act(done, "change");
-  assert.equal($("summary").textContent, "0 active · 1 on hold · 1 completed");
+  assert.equal($("summary").textContent, "1 open · 1 done");
 
   await act(doc.querySelectorAll(".filter").find((b) => b.dataset.status === "hold"), "click");
   assert.deepEqual(titles(), ["B"]);
+  assert.equal($("summary").textContent, "1 open · 1 done", "the footer ignores the status filter");
   await act(doc.querySelectorAll(".filter")[0], "click");
 
   await act($("tag-filter").querySelector(".chip"), "click");
   assert.deepEqual(titles(), ["A"]);
+  assert.equal($("summary").textContent, "1 open · 1 done", "the footer ignores the tag filter");
   await act($("tag-filter").querySelector(".chip-clear"), "click");
   assert.deepEqual(titles(), ["A", "B"]);
+
+  const priority = (p) => doc.querySelectorAll(".priority-filter").find((b) => b.dataset.priority === p);
+  await act(priority("high"), "click");
+  assert.deepEqual(titles(), []);
+  assert.equal($("summary").textContent, "1 open · 1 done", "the footer ignores the priority filter");
+  await act(priority("all"), "click");
 
   await act(row("A").querySelector(".task-delete"), "click");
   assert.deepEqual(titles(), ["B"]);
@@ -80,10 +90,24 @@ test("startApp: a repeating task can be stopped from the list", async () => {
   assert.equal($("task-list").firstElementChild.querySelector(".task-repeat").hidden, true);
 });
 
-test("startApp: explains when the database cannot be opened", async () => {
+test("startApp: unticking a done task moves it back to open in the footer", async () => {
+  await startApp(doc);
+  await addTask({ title: "A" });
+  const done = () => $("task-list").firstElementChild.querySelector(".task-done");
+  done().checked = true;
+  await act(done(), "change");
+  assert.equal($("summary").textContent, "0 open · 1 done");
+  done().checked = false;
+  await act(done(), "change");
+  assert.equal($("summary").textContent, "1 open · 0 done");
+});
+
+test("startApp: explains in the visible footer when the database cannot be opened", async () => {
   globalThis.indexedDB = createFakeIndexedDB({ failOpen: true });
+  $("summary").hidden = true; // as it is after rendering an empty list
   await startApp(doc);
   assert.equal($("summary").textContent, "Could not open the local database: open failed");
+  assert.equal($("summary").hidden, false);
 });
 
 test("main.js: starts the app on the page's document", async () => {
