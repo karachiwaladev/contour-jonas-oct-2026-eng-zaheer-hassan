@@ -10,6 +10,17 @@
 .field-grow { flex: 1; }
 .field-grow input { flex: 1; min-width: 0; }
 
+/* Search box (#21) */
+.search { position: relative; margin-bottom: 12px; }
+.search input { width: 100%; padding: 8px 36px 8px 12px; }
+.search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.search-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; color: var(--muted); font-size: 1.1rem; padding: 2px 8px; border-radius: 6px;
+}
+.search-clear[hidden] { display: none; }
+.search-clear:hover, .search-clear:focus-visible { color: var(--text); background: var(--accent-soft); }
+
 /* Status filters */
 .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .filter, .priority-filter {

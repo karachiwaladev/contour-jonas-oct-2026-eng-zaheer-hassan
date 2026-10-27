@@ -12,15 +12,16 @@ Layers only call downward: `ui → state → domain / storage`.
 | `src/main.js` | Bootstrap loaded by `index.html`: calls `startApp(document)` |
 | `src/startApp.js` | Wiring: storage, then state, then UI, for a given document. No business rules |
 | `src/config.js` | Constants (DB name, store, filter keys, due-soon window, repeats, priorities) |
-| `src/state.js` | Task list and view (status + tag + priority filter, both filters remembered). Actions incl. `editTask`, `setPriorityFilter`. The only place that changes them |
+| `src/state.js` | Task list and view (status + tag + priority filter, both filters remembered; search `query`, never saved). Actions incl. `editTask`, `setPriorityFilter`, `setQuery`. The only place that changes them |
 | `src/storage/db.js` | IndexedDB open and transaction helpers (`withStore`, multi-request `inTransaction`) |
 | `src/storage/taskRepo.js` | Task create/read/update/delete, normalising on read. Atomic, idempotent `complete` and `uncomplete` |
 | `src/domain/dates.js` | Local-day `YYYY-MM-DD` arithmetic, `dueState` |
 | `src/domain/tasks.js` | `normalize` (legacy shapes), `normalizePriority`, `parseTags`, `prepareNewTask` |
 | `src/domain/edit.js` | `applyEdit`: title/priority/due/tags only; blank title returns `null`. A repeating task keeps its due if cleared; moving a monthly due re-anchors `repeatDay` |
-| `src/domain/filters.js` | Counts by status and priority, tag catalogue, status/tag/priority filtering |
+| `src/domain/filters.js` | Counts by status and priority, tag catalogue, status/tag/priority/search filtering (all ANDed) |
+| `src/domain/search.js` | `matchesQuery`: every space-separated word must appear, case-insensitively, in the title or a tag; blank matches all |
 | `src/domain/recurrence.js` | `nextDueDate` (monthly anchor day), `completeTask`, `uncompleteTask`, `stopRepeating` |
-| `src/ui/*.js` | One module per component: task item, list, filter bar, priority filter, priority badge, tag row, form, edit form, chip |
+| `src/ui/*.js` | One module per component: task item, list, filter bar, priority filter, priority badge, tag row, form, edit form, chip, search box (`searchBox.js`: × and Esc clear) |
 | `styles/base.css` / `styles/components.css` | Tokens and elements / component styles |
 | `tests/*.test.js` | `node --test` unit tests for every `src/` module |
 | `tests/helpers/` | Test fakes: `fake-dom.js` (+ `parse-html.js`, loads the real `index.html`), `fake-idb.js`, `memory-repo.js` |
