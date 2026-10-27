@@ -48,6 +48,7 @@ Keep this table in sync whenever a project or factory tool is added, renamed or 
 | Name | Path | What it is |
 |------|------|------------|
 | factory-loop | `.claude/skills/factory-loop/` | Works the issue queue: 👀, answer/clarify/hold, PRs sent for review; closes only after a person approves |
+| persona-swarm | `.claude/skills/persona-swarm/` + `.claude/agents/persona-tester.md` | 5 persona agents (tech-savvy, power user, older user, hacker, keyboard/screen-reader) test UI tickets in Chrome before the PR; personas adapted from shoal |
 | guard hooks | `.claude/hooks/` | Block irreversible/secret-touching commands, scan read text for prompt injection, quality gate. Tests: `node --test .claude/hooks/tests/guards.test.js` |
 
 ### Projects
