@@ -52,7 +52,7 @@ test("startApp: typing in the search box filters by title and tag, ANDed with th
   await type("home rent");
   assert.deepEqual(titles(), ["Pay rent"]);
   assert.equal($("search").value, "home rent");
-  assert.ok(saved.every((k) => !k.includes("search") && !k.includes("query")), "the query is never saved");
+  assert.deepEqual([...new Set(saved)], ["todo-app:priority-filter"], "the query is never saved");
 });
 
 test("startApp: no matches names the query; × and Esc clear the search", async () => {
